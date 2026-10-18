@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CratonLab | Geology lab tools: mineral ID, stereonet & structural geology practice</title>
+<meta name="description" content="Free geology lab tools: thin-section mineral ID, interference colors, textures, sedimentary structures, an interactive stereonet, structural geology calculators and printable practice worksheets with answer keys.">
+<meta property="og:title" content="CratonLab">
+<meta property="og:description" content="Free geology lab tools: thin-section mineral ID, interference colors, textures, sedimentary structures, an interactive stereonet, structural geology calculators and printable practice worksheets with answer keys.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 46'%3E%3Cpath d='M23 3 40 12.5v21L23 43 6 33.5v-21Z' fill='none' stroke='%230e6a73' stroke-width='3.5' stroke-linejoin='round'/%3E%3Cpath d='M23 15 30 19v8L23 31 16 27v-8Z' fill='%230e6a73'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a petrographic workbench. Reticle masthead with a Michel-Lévy color band as the signature, tabbed tools below:
+   Identify (property chips left, ranked matches right), Interference colors, Textures, Ask a tutor. */
+:root{
+  --bg:#eef1f3; --paper:#ffffff; --ink:#15212b; --muted:#5d6b77; --line:#d6dde3; --soft:#f5f7f9;
+  --acc:#0e6a73; --acc-soft:#dff0f1; --ok:#1d7a4c; --ok-soft:#e1f2e8; --bad:#b3402d; --bad-soft:#f8e4df;
+  --disp:"Newsreader",Georgia,serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1418; --paper:#161d23; --ink:#e4ebf0; --muted:#93a2ae; --line:#2a353e; --soft:#1b242b;
+  --acc:#5cc3cb; --acc-soft:#173236; --ok:#5fcf93; --ok-soft:#173226; --bad:#f08b75; --bad-soft:#3a1f1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --paper:#161d23; --ink:#e4ebf0; --muted:#93a2ae; --line:#2a353e; --soft:#1b242b;
+  --acc:#5cc3cb; --acc-soft:#173236; --ok:#5fcf93; --ok-soft:#173226; --bad:#f08b75; --bad-soft:#3a1f1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header{display:grid;gap:10px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{flex:none}
+.tag{margin:4px 0 0;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--disp);font-weight:600;font-size:clamp(30px,6vw,44px);line-height:1;margin:0;letter-spacing:-.01em}
+.sub{margin:0;color:var(--muted);max-width:62ch}
+.band{height:10px;border-radius:5px;background:linear-gradient(90deg,#000,#707070 5%,#ececec 13%,#efe08a 17%,#e8963a 23%,#d8543c 26%,#6a2c90 29.5%,#2c6fd0 35%,#58c070 41.5%,#e8d64a 48%,#e86a6a 54%,#7a4aa8 58.5%,#46a8b0 65%,#a8d07a 72.5%,#e8a0a0 80%,#a8a8cc 86%,#e6d8cc 100%)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;font-weight:500;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--acc)}
+.panel{display:grid;gap:16px}
+[hidden]{display:none!important}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0}
+.btn{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:14px;font-weight:500}
+.btn:hover{border-color:var(--acc)}
+.btn.main{background:var(--acc);color:#fff;border-color:var(--acc)}
+:root[data-theme="dark"] .btn.main{color:#0f1418}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.main{color:#0f1418}}
+.btn:disabled{opacity:.55;cursor:wait}
+
+
+/* stereonet */
+.st{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr) minmax(0,300px);gap:16px;align-items:start}
+@media (max-width:1060px){.st{grid-template-columns:minmax(0,320px) minmax(0,1fr)}.st-side{grid-column:1/-1}}
+@media (max-width:720px){.st{grid-template-columns:minmax(0,1fr)}.st-net{order:-1}}
+.st-ctl,.st-side{display:grid;gap:12px}
+.st-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.st-row label{display:grid;gap:3px;font-size:13px;color:var(--muted);flex:1 1 90px;min-width:0}
+.st-row label.wide{flex:1 1 100%}.st-row label.inl{display:flex;align-items:center;gap:6px;flex:1 1 auto;color:var(--ink);font-size:14px}
+.st-end{justify-content:space-between}.st-end label.wide{flex:1 1 140px}
+.st-row input:not([type=checkbox]),.st-ad input,.st-row select,#stBulk{font:inherit;font-size:15px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%;min-width:0}
+.st-row select{width:auto;flex:1 1 160px}
+.st-net svg{width:100%;height:auto;display:block;touch-action:none;max-width:560px;margin:8px auto}
+.st-bg{fill:var(--paper)}.st-grid path{fill:none;stroke:var(--line);stroke-width:.7}.st-axis{stroke:var(--muted);stroke-width:.6;opacity:.6}
+.st-prim{fill:none;stroke:var(--ink);stroke-width:1.4}.st-tick{stroke:var(--muted);stroke-width:1}.st-n{font:600 15px var(--body);fill:var(--ink)}
+.st-gc{fill:none;stroke-width:2}.st-gc.sel{stroke-width:3.4}.st-pole{stroke-width:2.2;fill:none}.st-pole.sel{stroke-width:3.2}.st-pt{stroke:var(--paper);stroke-width:1.5}
+.st-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.st-it{display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
+.st-it label{display:flex;gap:8px;align-items:flex-start;font-family:var(--mono);font-size:13px}
+.st-it label b{font-family:var(--body)}
+.st-it i{width:12px;height:12px;border-radius:3px;flex:none;margin-top:3px}
+.st-act{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.btn.small{padding:3px 9px;font-size:13px}.btn.small[aria-pressed="true"]{border-color:var(--acc);color:var(--acc)}
+.st-out p{margin:0 0 6px}.st-out details{margin-top:6px;font-size:14px}.st-out ol{padding-left:20px;margin:6px 0 0}
+.st-ad{display:grid;gap:4px;margin:8px 0;font-size:14px}.st-ad label{display:flex;gap:8px;align-items:center}.st-ad input{width:90px}
+
+
+/* structural */
+.sg2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.sg2{grid-template-columns:minmax(0,1fr)}}
+.sg-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;margin:0 0 8px}.sg-dl dt{font-size:12px;color:var(--muted)}.sg-dl dd{margin:0;font-family:var(--mono);font-size:16px}
+.sg-big{font-family:var(--mono);font-size:24px;margin:0 0 8px}.sg-big .note{font-family:var(--body);font-size:13px;display:block}
+.mono{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.tp b{font-family:var(--mono);width:16px;align-self:center;padding-top:14px}
+#tpOut ol{padding-left:20px;margin:6px 0 10px;font-size:14px}
+#moSvg{width:100%;height:auto;display:block}
+.mo-ax{stroke:var(--muted);stroke-width:1}.mo-t{font:12px var(--mono);fill:var(--muted)}.mo-c{fill:color-mix(in srgb,var(--acc) 10%,transparent);stroke:var(--acc);stroke-width:2}
+.mo-dot{fill:var(--ink)}.mo-env{stroke:var(--bad);stroke-width:1.6;stroke-dasharray:6 4}.mo-ten{stroke:var(--bad);stroke-width:1.2;stroke-dasharray:2 3}.mo-r{stroke:var(--acc);stroke-width:1.2}.mo-pt{fill:var(--acc);stroke:var(--paper);stroke-width:2}
+.dg .dash{stroke-dasharray:5 4}
+
+
+/* practice */
+.gr-in{font:14px var(--mono);color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%}
+table.gr{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}table.gr th,table.gr td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}table.gr th{font:500 12px var(--mono);color:var(--muted)}
+.gr-items{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;margin:6px 0}.gr-it{display:grid;justify-items:center;font:11px var(--mono);color:var(--muted);width:28px}.gr-it i{display:block;width:14px;background:var(--acc);border-radius:2px}.gr-it i.lo{background:var(--bad)}.gr-it b{font-weight:500;color:var(--ink)}
+.ws-mc{margin:6px 0 0;padding-left:26px}.ws-key{font:13px var(--mono);line-height:1.8}.ws-bs{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px}.ws-bs h1{font-size:18px}.bs-head{display:flex;gap:20px;flex-wrap:wrap;margin:6px 0;font-size:14px}.bs-grid{columns:2;column-gap:32px}.bs-row{display:flex;align-items:center;gap:8px;padding:4px 0;break-inside:avoid}.bs-n{width:24px;text-align:right;font-weight:600}.bs-b{width:20px;height:20px;border:1.5px solid var(--ink);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted)}.bs-score{margin-top:10px}
+@media (max-width:520px){.bs-grid{columns:1}}
+
+.pq{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.pq{grid-template-columns:minmax(0,1fr)}}
+.pq-topics{display:grid;gap:10px}
+.pq-q{font-size:16px;margin:8px 0 12px}.pq-q .mono{font-size:14px}
+.pq-props{margin:6px 0 0;padding-left:18px}
+.pq-ans{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}.pq-ans label{display:grid;gap:3px;font-size:13px;color:var(--muted);flex:1 1 120px}
+.pq-ans input{font:inherit;font-size:15px;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+.pq-v{font-weight:600;margin:10px 0 4px}.pq-v.ok{color:var(--ok)}.pq-v.bad{color:var(--bad)}
+#pqRes details{font-size:14px}#pqRes ol{padding-left:20px;margin:6px 0}
+.ws-prev{border:1px solid var(--line);border-radius:8px;padding:12px 16px;background:var(--soft);margin-top:8px;font-size:14px}.ws-prev h1{font-size:20px;margin:0}.ws-prev .meta{color:var(--muted);margin:2px 0 10px}.ws-t{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}.ws-list>li{margin-bottom:12px}.ws-steps{color:var(--muted)}
+
+/* identify */
+.id{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.id{grid-template-columns:1fr}}
+.filters{display:grid;gap:14px;position:sticky;top:12px}
+@media (max-width:820px){.filters{position:static}}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.light{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-size:20px;font-weight:600;margin:0}
+.light i{width:14px;height:14px;border-radius:50%;flex:none}
+.ppl i{background:radial-gradient(circle at 35% 35%,#fff,#d9e3ea);box-shadow:0 0 0 1px var(--line)}
+.xpl i{background:conic-gradient(#d8543c,#e8d64a,#58c070,#2c6fd0,#6a2c90,#d8543c)}
+.grp{display:grid;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 11px;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#0f1418}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#0f1418}}
+.chip .sw{width:12px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 1px #0003}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.results{display:grid;gap:10px}
+.rhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.rhead h2{font-family:var(--disp);font-weight:600;font-size:22px;margin:0}
+.min{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.min.top{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.mbtn{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;width:100%;text-align:left;background:none;border:0;padding:14px 16px}
+.mname{font-family:var(--disp);font-size:20px;font-weight:600;line-height:1.15}
+.mgrp{font-size:13px;color:var(--muted)}
+.score{display:grid;justify-items:end;gap:4px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.meter{width:84px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--acc)}
+.hits{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
+.hit,.miss{font-size:12px;padding:2px 8px;border-radius:999px}
+.hit{background:var(--ok-soft);color:var(--ok)}
+.miss{background:var(--bad-soft);color:var(--bad)}
+.mkey{grid-column:1/-1;margin:0;font-size:15px}
+.detail{border-top:1px solid var(--line);padding:14px 16px;display:grid;gap:12px;background:var(--soft)}
+.props{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 16px;margin:0}
+.props div{display:grid;gap:1px}
+.props dt{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.props dd{margin:0;font-size:14px}
+.detail p{margin:0;font-size:15px}
+.mini{height:12px;border-radius:6px;position:relative;margin-top:4px}
+.mini b{position:absolute;top:-4px;width:3px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-1px)}
+
+/* interference */
+.ml svg{width:100%;height:auto;display:block;overflow:visible}
+.ml .axis{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.ml .mk{font-family:var(--body);font-size:11px;fill:var(--ink)}
+.mlctl{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.mlctl label{display:flex;gap:8px;align-items:center;font-size:14px}
+.mlctl input{accent-color:var(--acc)}
+.readout{font-family:var(--mono);font-size:14px;padding:10px 12px;border-radius:8px;background:var(--soft);border:1px solid var(--line)}
+.near{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.scroll{overflow-x:auto}
+
+/* textures */
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tex h3{font-family:var(--disp);font-size:19px;margin:0 0 4px}
+.tex p{margin:0 0 6px;font-size:15px}
+.src{font-size:12px;color:var(--muted);margin:6px 0 0}.src a{color:inherit}
+.tex .lbl{display:block;margin-bottom:6px}
+
+/* tutor */
+.tutor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.tutor{grid-template-columns:1fr}}
+textarea{width:100%;font:inherit;color:inherit;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+.drop{display:grid;place-items:center;text-align:center;min-height:120px;border:2px dashed var(--line);border-radius:10px;padding:12px;cursor:pointer;background:var(--soft)}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs img{width:110px;height:82px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.status{font-family:var(--mono);font-size:13px;color:var(--acc);margin:0;min-height:1.2em}
+.cand{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}
+.cand b{font-family:var(--disp);font-size:18px}
+footer{font-size:12px;color:var(--muted);max-width:90ch}
+/* sedimentary structures + photos */
+.photos{font-size:14px;margin:0}
+.photos a{color:var(--acc)}
+.sedctl{display:grid;gap:12px}
+.sedfoot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sedgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+@media (max-width:400px){.sedgrid{grid-template-columns:1fr}}
+.sed{display:grid;gap:10px;align-content:start}
+.sed h3{font-family:var(--disp);font-size:20px;margin:2px 0 4px}
+.sed p{margin:0;font-size:15px}
+.sedd{display:grid;gap:8px;margin:0}
+.sedd dt{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sedd dd{margin:0;font-size:14px}
+.dg{margin:0;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px}
+.dg svg{display:block;width:100%;height:auto;color:var(--ink)}
+.dg figcaption{font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right}
+.dg .bed{fill:#e7d6a8;stroke:none}
+.dg .fill{fill:#e7d6a8;stroke:currentColor;stroke-width:1}
+.dg .mudb{fill:#8a8f96;stroke:none}
+.dg .mud{fill:none;stroke:#5d646c;stroke-width:3}
+.dg .ln{fill:none;stroke:currentColor;stroke-width:1.6}
+.dg .thin{stroke-width:1}
+.dg .dot{fill:#7a6040}
+.dg .clast{fill:#b9b2a6;stroke:currentColor;stroke-width:1}
+.dg .arr{stroke:var(--acc);stroke-width:2;fill:none}
+.dg .ahd{fill:var(--acc)}
+.dg .t{font-family:var(--mono);font-size:9px;fill:var(--muted)}
+footer p{margin:0 0 6px}
+footer a{color:var(--acc)}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 3 40 12.5v21L23 43 6 33.5v-21Z" fill="none" stroke="var(--acc)" stroke-width="2.2" stroke-linejoin="round"/><path d="M23 10.5 33.5 16.5v13L23 35.5 12.5 29.5v-13Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><path d="M23 17.5 27.5 20v6L23 28.5 18.5 26v-6Z" fill="var(--acc)"/></svg>
+      <div><h1>CratonLab</h1><p class="tag">Geology lab tools, built on solid ground</p></div>
+    </div>
+    <p class="sub">Identify minerals in thin section, read sedimentary structures, solve stereonet and structural geology problems, and practice with worked solutions. Every claim links to its source.</p>
+    <div class="band" aria-hidden="true"></div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-t="id" aria-selected="true">Identify</button>
+    <button class="tab" role="tab" data-t="ml" aria-selected="false">Interference colors</button>
+    <button class="tab" role="tab" data-t="tx" aria-selected="false">Textures</button>
+    <button class="tab" role="tab" data-t="sd" aria-selected="false">Sedimentary structures</button>
+    <button class="tab" role="tab" data-t="st" aria-selected="false">Stereonet</button>
+    <button class="tab" role="tab" data-t="sg" aria-selected="false">Structural</button>
+    <button class="tab" role="tab" data-t="pq" aria-selected="false">Practice</button>
+    <button class="tab" role="tab" data-t="ai" aria-selected="false">Ask a tutor</button>
+  </div>
+
+  <section class="panel" id="p-id" role="tabpanel">
+    <div class="id">
+      <div class="card filters">
+        <div class="fhead"><span class="lbl">Try an example</span><button class="btn" id="reset" type="button">Clear all</button></div>
+        <div class="presets" id="presets"></div>
+        <p class="light ppl"><i></i>Plane-polarized light</p>
+        <div id="fPPL"></div>
+        <p class="light xpl"><i></i>Cross-polarized light</p>
+        <div id="fXPL"></div>
+      </div>
+      <div class="results">
+        <div class="rhead"><h2 id="rTitle">All minerals</h2><span class="note" id="rNote">Tap properties on the left to narrow it down.</span></div>
+        <div id="rList" class="results"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-ml" role="tabpanel" hidden>
+    <div class="card ml">
+      <span class="lbl">Michel-Lévy interference color chart</span>
+      <p class="note" style="margin:6px 0 12px">Retardation = birefringence × thickness. Each mineral is marked at its maximum color for the thickness you choose. Tap the color strip to estimate birefringence from the highest color you see.</p>
+      <div class="mlctl"><label>Thickness <input type="range" id="thk" min="20" max="40" step="1" value="30"><b id="thkV">30 µm</b></label></div>
+      <div class="scroll"><div style="min-width:640px" id="mlChart"></div></div>
+      <div class="readout" id="mlRead">Tap the strip to read retardation and birefringence.</div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-tx" role="tabpanel" hidden>
+    <div class="chips" id="txFilter"></div>
+    <div class="tgrid" id="txList"></div>
+  </section>
+
+  <section class="panel" id="p-sd" role="tabpanel" hidden>
+    <div class="card sedctl">
+      <div class="grp"><span class="lbl">What do you need it to tell you?</span><div class="chips" id="sedTell"></div></div>
+      <div class="grp"><span class="lbl">Where do you see it?</span><div class="chips" id="sedSee"></div></div>
+      <div class="sedfoot"><span class="note" id="sedCount"></span><button class="btn" id="sedClear" type="button">Clear filters</button></div>
+    </div>
+    <div class="sedgrid" id="sedList"></div>
+  </section>
+
+  <section class="panel" id="p-st" role="tabpanel" hidden>
+    <div class="st">
+      <div class="st-ctl">
+        <div class="card grp">
+          <div class="fhead"><span class="lbl">Add a plane</span><span class="chips"><button class="chip" data-mode="rhr" type="button">Strike/dip</button><button class="chip" data-mode="dd" type="button">Dip dir/dip</button></span></div>
+          <div class="st-row"><label><span id="stA_l">Strike (right-hand rule)</span><input id="stA" inputmode="text" autocomplete="off"></label><label><span>Dip</span><input id="stB" inputmode="text" autocomplete="off"></label></div>
+          <div class="st-row"><label class="wide"><span>Label (optional)</span><input id="stLbl" maxlength="40" placeholder="e.g. Bedding"></label></div>
+          <div class="st-row st-end"><label class="inl"><input type="checkbox" id="stPole"> Plot pole too</label><button class="btn main" id="stAddP" type="button">Plot plane</button></div>
+          <p class="note" id="stMsg" role="status"></p>
+          <p class="note">Quadrant bearings work too: strike N40E with dip 35SE.</p>
+        </div>
+        <div class="card grp">
+          <span class="lbl">Add a line</span>
+          <div class="st-row"><label><span>Trend</span><input id="stT" inputmode="text" autocomplete="off" placeholder="e.g. 250"></label><label><span>Plunge</span><input id="stP" inputmode="decimal" autocomplete="off" placeholder="e.g. 20"></label></div>
+          <div class="st-row st-end"><label class="wide"><span>Label (optional)</span><input id="stLblL" maxlength="40" placeholder="e.g. Fold axis"></label><button class="btn main" id="stAddL" type="button">Plot line</button></div>
+          <p class="note" id="stMsgL" role="status"></p>
+        </div>
+        <details class="card grp"><summary class="lbl">Paste many measurements</summary>
+          <p class="note">One per line, two numbers each (e.g. <code>040/35</code> or <code>40 35</code>). Planes use the notation chosen above.</p>
+          <textarea id="stBulk" rows="5" placeholder="040/35&#10;052/41&#10;033/38"></textarea>
+          <div class="st-row st-end"><select id="stBulkK"><option value="plane">As planes (great circles)</option><option value="pole">As poles only</option><option value="line">As lines (trend/plunge)</option></select><button class="btn" id="stBulkGo" type="button">Add all</button></div>
+          <p class="note" id="stBulkMsg" role="status"></p>
+        </details>
+      </div>
+      <div class="card st-net">
+        <div class="fhead"><span class="lbl" id="stNetName"></span><span class="chips"><button class="chip" data-net="area" type="button">Schmidt</button><button class="chip" data-net="angle" type="button">Wulff</button></span></div>
+        <svg id="stSvg" viewBox="0 -14 440 454" role="img" aria-label="Stereonet plot"></svg>
+        <p class="note" id="stCur">Point at the net to read trend and plunge.</p>
+        <div class="st-row st-end"><span class="note">Folded bedding? Plot three or more planes, then</span><button class="btn" id="stPi" type="button">Fold axis (π)</button></div>
+        <p class="note" id="stPiMsg" role="status"></p>
+      </div>
+      <div class="st-side">
+        <div class="card grp">
+          <div class="fhead"><span class="lbl">Plotted · tick two to compare</span><span><button class="btn small" id="stDemo" type="button">Example</button> <button class="btn small" id="stClear" type="button">Clear</button></span></div>
+          <ul class="st-list" id="stList"></ul>
+        </div>
+        <div class="card grp st-out" id="stOut" aria-live="polite"></div>
+        <p class="note">Lines are written plunge→trend, planes as right-hand-rule strike/dip. Structural geology normally uses a lower-hemisphere equal-area (Schmidt) net, which is also the one to use for counting point density; the Wulff net is the equal-angle version. Sources: <a href="https://geol319r4.athabascau.ca/lab-unit03.htm" target="_blank" rel="noopener">Athabasca Univ. GEOL 319 Lab 3</a> · <a href="https://courses.eas.ualberta.ca/eas233/0809winter/EAS233Lab03notes.pdf" target="_blank" rel="noopener">U. Alberta EAS 233 Lab 3</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-sg" role="tabpanel" hidden>
+    <div class="chips" id="sgNav"></div>
+
+    <div data-sg="conv" class="sg2">
+      <div class="card grp"><div class="fhead"><span class="lbl">Convert a plane</span><span class="chips"><button class="chip" data-cv="rhr" aria-pressed="true" type="button">Strike/dip</button><button class="chip" data-cv="dd" aria-pressed="false" type="button">Dip dir/dip</button></span></div>
+        <div class="st-row"><label><span id="cvA_l">Strike</span><input id="cvA" autocomplete="off" placeholder="e.g. N40E or 040"></label><label><span>Dip</span><input id="cvB" autocomplete="off" placeholder="e.g. 35SE"></label></div></div>
+      <div class="card grp" aria-live="polite"><div id="cvOut"></div><p class="src">Source: <a href="https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.01%3A_Lab_1_-_Orientation_of_Lines_and_Planes" target="_blank" rel="noopener">Waldron & Snyder Lab 1</a></p></div>
+    </div>
+
+    <div data-sg="three" class="sg2" id="sgThree">
+      <div class="card grp"><div class="fhead"><span class="lbl">Three points on one plane</span><button class="btn small" id="tpEx" type="button">Example</button></div>
+        <p class="note">Use map coordinates (east, north) and elevation, all in the same units, e.g. meters.</p>
+        <div class="st-row tp"><b>A</b><label><span>East</span><input id="tpAe" inputmode="decimal"></label><label><span>North</span><input id="tpAn" inputmode="decimal"></label><label><span>Elevation</span><input id="tpAz" inputmode="decimal"></label></div><div class="st-row tp"><b>B</b><label><span>East</span><input id="tpBe" inputmode="decimal"></label><label><span>North</span><input id="tpBn" inputmode="decimal"></label><label><span>Elevation</span><input id="tpBz" inputmode="decimal"></label></div><div class="st-row tp"><b>C</b><label><span>East</span><input id="tpCe" inputmode="decimal"></label><label><span>North</span><input id="tpCn" inputmode="decimal"></label><label><span>Elevation</span><input id="tpCz" inputmode="decimal"></label></div>
+      </div>
+      <div class="card grp" aria-live="polite"><div id="tpOut"></div><p class="src">Source: <a href="https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.02%3A_Lab_2_-_Cross-sections_and_Three-point_Problems" target="_blank" rel="noopener">Waldron & Snyder Lab 2</a></p></div>
+    </div>
+
+    <div data-sg="thick" class="sg2" id="sgThick">
+      <div class="card grp"><span class="lbl">True thickness from a map or traverse</span>
+        <div class="st-row"><label><span>h: outcrop width, horizontal, ⟂ strike</span><input id="thH" inputmode="decimal" placeholder="e.g. 120"></label><label><span>Dip (°)</span><input id="thD" inputmode="decimal" placeholder="e.g. 30"></label></div>
+        <div class="st-row"><label class="wide"><span>Ground</span><select id="thKind"><option value="flat">Horizontal ground</option><option value="opp">Slope and bedding dip in opposite directions</option><option value="steep">Same direction, bedding steeper than slope</option><option value="gentle">Same direction, bedding gentler than slope</option></select></label></div>
+        <div class="st-row" id="thVw" hidden><label><span>v: elevation difference between the contacts</span><input id="thV" inputmode="decimal" placeholder="e.g. 20"></label></div>
+        <div id="thOut" aria-live="polite"></div><p class="src">Source: <a href="https://people.wou.edu/~taylors/es406_structure/LAB3_geo_maps.pdf" target="_blank" rel="noopener">Western Oregon Univ. ES406 Lab 3</a></p>
+      </div>
+      <div class="card grp"><span class="lbl">Depth to a bed (flat ground)</span>
+        <div class="st-row"><label><span>Horizontal distance ⟂ strike from outcrop</span><input id="dpX" inputmode="decimal" placeholder="e.g. 100"></label><label><span>Dip (°)</span><input id="dpD" inputmode="decimal" placeholder="e.g. 32"></label></div>
+        <div id="dpOut" aria-live="polite"></div><p class="src">Source: <a href="https://geol319r4.athabascau.ca/lab-unit04.htm" target="_blank" rel="noopener">Athabasca Univ. GEOL 319 Lab 4</a></p>
+      </div>
+    </div>
+
+    <div data-sg="mohr" class="sg2">
+      <div class="card grp"><div class="fhead"><span class="lbl">Stresses (any units, compression +)</span><button class="btn small" id="moEx" type="button">Example</button></div>
+        <div class="st-row"><label><span>σ1</span><input id="moS1" inputmode="decimal" placeholder="e.g. 100"></label><label><span>σ3</span><input id="moS3" inputmode="decimal" placeholder="e.g. 40"></label><label><span>θ: σ1 to plane normal (°)</span><input id="moT" inputmode="decimal" placeholder="e.g. 60"></label></div>
+        <span class="lbl">Failure envelope (optional)</span>
+        <div class="st-row"><label><span>Cohesion C</span><input id="moC" inputmode="decimal" placeholder="e.g. 10"></label><label><span>Friction angle φ (°)</span><input id="moF" inputmode="decimal" placeholder="e.g. 30"></label><label><span>Tensile strength T</span><input id="moTs" inputmode="decimal" placeholder="optional"></label></div>
+        <div id="moOut" aria-live="polite"></div><p class="src">Source: <a href="https://ocw.mit.edu/courses/12-113-structural-geology-fall-2005/49f5de4deb991c038917151ce333ab4e_notes1.pdf" target="_blank" rel="noopener">MIT OCW 12.113 notes</a> · <a href="https://books.gw-project.org/structural-geology-applied-to-fractured-aquifer-characterization/chapter/2-4-stress-magnitude-and-fracture-types/" target="_blank" rel="noopener">GW Project 2.4</a> · <a href="https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01%3A_Topics/1.09%3A_Dynamic_Analysis-_Stress" target="_blank" rel="noopener">Waldron & Snyder 1.9</a></p>
+      </div>
+      <div class="card"><svg id="moSvg" viewBox="0 0 520 300" role="img" aria-label="Mohr circle"></svg></div>
+    </div>
+
+    <div data-sg="learn"><div class="tgrid" id="sgLearn"></div></div>
+  </section>
+
+  <section class="panel" id="p-pq" role="tabpanel" hidden>
+    <div class="pq">
+      <div class="card grp"><span class="lbl">Topics</span><div id="pqTopics" class="pq-topics"></div>
+        <div class="st-row st-end"><span class="note" id="pqScore"></span><span><button class="btn small" id="pqReset" type="button">Reset score</button> <button class="btn main" id="pqNew" type="button">New problem</button></span></div></div>
+      <div class="card grp pq-card" id="pqCard"></div>
+    </div>
+    <div class="card grp">
+      <span class="lbl">Printable worksheet</span>
+      <p class="note">Builds a set from the topics you've picked, with a blank equal-area net if any stereonet problems are included and the answer key on its own page. Every set gets a code; the same code always rebuilds the same problems and key.</p>
+      <div class="st-row"><label class="wide"><span>Title</span><input id="wsTitle" maxlength="80" value="Structural geology practice"></label></div>
+      <div class="st-row"><label><span>Problems</span><input id="wsN" inputmode="numeric" value="8"></label><label><span>Set number</span><input id="wsSeed" inputmode="numeric" value="101"></label><button class="btn" id="wsRand" type="button">New set</button></div>
+      <div class="st-row"><label class="inl"><input type="checkbox" id="wsMc" checked> Multiple choice with bubble answer sheet</label></div>
+      <div class="st-row st-end"><label class="inl"><input type="checkbox" id="wsKey"> Show answers in preview</label><span><button class="btn" id="wsPrev" type="button">Preview</button> <button class="btn main" id="wsDl" type="button">Download worksheet</button></span></div>
+      <p class="note">Set code <b class="mono" id="wsCode">—</b> <span class="mono" id="wsKeyLine"></span></p>
+      <p class="note" id="wsDlNote" role="status"></p>
+      <details><summary class="note">Rebuild a set from its code</summary><div class="st-row"><label><span>Set code</span><input id="wsCodeIn" placeholder="e.g. 101-8-M-0123"></label><button class="btn" id="wsLoad" type="button">Load</button></div><p class="note" id="wsLoadMsg" role="status"></p></details>
+      <div id="wsOut"></div>
+    </div>
+    <div class="card grp">
+      <span class="lbl">Grade bubble sheets</span>
+      <p class="note">Enter the set code from the sheet, then one student per line: a name, a comma, and their letters in order. Use a dash for a blank, e.g. <span class="mono">Maria R, BDAC-ABD</span>.</p>
+      <div class="st-row"><label><span>Set code</span><input id="grCode" placeholder="blank = current settings"></label></div>
+      <textarea id="grIn" rows="6" class="gr-in" placeholder="Maria R, BDACAABD&#10;Jon T, BDBCA-BD"></textarea>
+      <div class="st-row st-end"><span class="note" id="grNote" role="status"></span><span><button class="btn" id="grDl" type="button">Download scores (CSV)</button> <button class="btn main" id="grGo" type="button">Grade</button></span></div>
+      <div id="grOut" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-ai" role="tabpanel" hidden>
+    <div class="tutor">
+      <div class="card" style="display:grid;gap:12px">
+        <span class="lbl">Describe your grain</span>
+        <textarea id="aiDesc" rows="5" maxlength="1200" placeholder="e.g. Greenish, pleochroic to brown, two cleavages at an angle, inclined extinction around 20°, in a medium-grained intermediate igneous rock."></textarea>
+        <label class="drop" for="aiFile"><span id="aiDropTxt"><b>Add photos (optional)</b><br><span class="note">A PPL and an XPL photo of the same spot work best</span></span><div class="thumbs" id="aiThumbs" hidden></div></label>
+        <input type="file" id="aiFile" accept="image/*" multiple hidden>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn main" id="aiGo" type="button">Suggest minerals</button><button class="btn" id="aiFromSel" type="button">Use my selected properties</button></div>
+        <p class="status" id="aiStatus" role="status"></p>
+      </div>
+      <div class="card" style="display:grid;gap:10px">
+        <span class="lbl">Tutor's suggestions</span>
+        <div id="aiOut"><p class="note">Suggestions appear here with the reasoning and what to check next on the scope to confirm.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer><p>Mineral properties are typical values for standard 30 µm sections and vary with composition and orientation. Interference colors on this page are an approximate visual guide. Confirm important IDs with an optical mineralogy reference.</p>
+  <p><b>Sources, minerals:</b> <span id="srcMin"></span></p><p><b>Sources, sedimentary structures:</b> <span id="srcSed"></span></p><p><b>Sources, structural geology:</b> <span id="srcSg"></span></p>
+  <p>Photo links open other sites: the Alex Strekeisen thin-section collection, the University of Geneva OpticMin image pages, and Wikimedia Commons search.</p></footer>
+</div>
+
+<script>
+/* Optical data for common rock-forming minerals in standard 30 µm thin section.
+   Checked against: OpticMin (P. Perroud, ATHENA, Univ. of Geneva); Alex Strekeisen thin-section site; Wikipedia mineral
+   infoboxes; "Distinguishing features of minerals" (UT Arlington); MIT OCW 12.109 amphibole lab; SEPM Strata (carbonate staining).
+   xpl: iso, opq, g1 (1st-order gray–white), y1 (1st-order yellow–red), o2 (2nd), o3 (3rd), hi (very high order). anom = anomalous colors. */
+const AS="https://www.alexstrekeisen.it/english/",AT="https://athena.unige.ch/athena/mineral/optical_mineralogy/images/";
+const MINERALS=[
+{n:"Quartz",g:"Framework silicate",col:["colorless"],pleo:["none"],rel:["low"],d:.009,xpl:["g1"],ext:["undulose","parallel"],tw:["none"],clv:["none"],hab:["anhedral"],opt:"Uniaxial (+)",
+ key:"Recognized by low relief, low birefringence (about 0.009, 1st-order gray to white), and no cleavage or twinning. Uniaxial positive. Plastically strained grains show sweeping (undulose) extinction.",
+ vs:"Plagioclase is biaxial, has cleavage and is usually twinned. Orthoclase looks similar but has negative relief. Cordierite alters readily to yellowish pinite and is often twinned.",
+ rocks:"Granite, rhyolite, sandstone, quartzite, schist, gneiss",ph:[["Alex Strekeisen",AS+"pluto/quartz.php"]]},
+{n:"Plagioclase",g:"Feldspar",col:["colorless"],pleo:["none"],rel:["low"],d:.010,xpl:["g1"],ext:["inclined"],tw:["polysynthetic","simple"],clv:["two90"],hab:["lath","anhedral"],opt:"Biaxial (±)",
+ key:"Polysynthetic (albite) twinning: parallel stripes that alternate light and dark as you rotate. Birefringence about 0.007–0.013, so 1st-order gray to white. Often clouded by alteration.",
+ vs:"Untwinned plagioclase closely resembles quartz, but quartz is uniaxial and lacks cleavage. Microcline twins form a grid, not one set of stripes.",
+ rocks:"Basalt, gabbro, andesite, diorite, granite, many metamorphic rocks",ph:[["Alex Strekeisen",AS+"pluto/plagioclase.php"],["Univ. of Geneva (albite)",AT+"albite-low.html"]]},
+{n:"Orthoclase",g:"K-feldspar",col:["colorless"],pleo:["none"],rel:["low"],neg:true,d:.006,xpl:["g1"],ext:["inclined","parallel"],tw:["simple","none"],clv:["two90"],hab:["tabular","anhedral"],opt:"Biaxial (−)",
+ key:"Negative relief and low 1st-order gray (birefringence about 0.005–0.006). Typically Carlsbad twins (two halves). Can host perthite lamellae.",
+ vs:"Microcline has grid twinning. Quartz looks similar but has positive relief. Sanidine is usually told apart by its 2V angle.",
+ rocks:"Granite, syenite, arkose",ph:[["Alex Strekeisen (perthite)",AS+"pluto/perthite.php"]]},
+{n:"Microcline",g:"K-feldspar",col:["colorless"],pleo:["none"],rel:["low"],neg:true,d:.007,xpl:["g1"],ext:["inclined"],tw:["tartan"],clv:["two90"],hab:["anhedral"],opt:"Biaxial (−)",
+ key:"Grid (cross-hatched, 'tartan') twinning in XPL, from combined albite and pericline twins. Up to 1st-order white.",
+ vs:"Plagioclase twins are one set of parallel stripes. Orthoclase has no grid.",
+ rocks:"Granite, pegmatite, gneiss, arkose",ph:[]},
+{n:"Sanidine",g:"K-feldspar",col:["colorless"],pleo:["none"],rel:["low"],neg:true,d:.007,xpl:["g1"],ext:["inclined","parallel"],tw:["simple","none"],clv:["two90"],hab:["tabular","lath"],opt:"Biaxial (−)",
+ key:"The K-feldspar typical of felsic volcanic rocks. Carlsbad twins common, 1st-order gray (birefringence about 0.007).",
+ vs:"Low sanidine has a smaller 2V than orthoclase. Quartz looks similar but is uniaxial.",
+ rocks:"Rhyolite, trachyte, obsidian, tuff",ph:[]},
+{n:"Muscovite",g:"Mica",col:["colorless"],pleo:["none"],rel:["moderate","twinkle"],d:.038,xpl:["o2","o3"],ext:["parallel","birdseye"],tw:["none"],clv:["one"],hab:["flaky"],opt:"Biaxial (−)",
+ key:"Colorless flakes with one perfect cleavage, bright 2nd- to 3rd-order colors (birefringence about 0.035–0.042) and mottled 'bird's-eye' extinction typical of micas.",
+ vs:"Muscovite is distinguished from biotite by its lack of color.",
+ rocks:"Granite, pegmatite, schist, phyllite",ph:[["Alex Strekeisen",AS+"pluto/muscovite.php"],["Alex Strekeisen (sericite)",AS+"pluto/sericite.php"]]},
+{n:"Biotite",g:"Mica",col:["brown","green"],pleo:["strong"],rel:["moderate"],d:.045,xpl:["o2","o3"],masked:true,ext:["parallel","birdseye"],tw:["none"],clv:["one"],hab:["flaky"],opt:"Biaxial (−)",
+ key:"Brown, brownish green or reddish brown flakes with strong pleochroism. Darker when the cleavage trace is parallel to the lower polarizer. Bird's-eye extinction. Birefringence 0.028–0.07, often masked by the mineral's color. Can show dark pleochroic halos around inclusions such as zircon, apatite or titanite.",
+ vs:"Green or brown tourmaline looks similar but has no cleavage and is darker when its long axis is perpendicular to the lower polarizer. Amphiboles have two cleavages. Chlorite has lower birefringence and often anomalous colors.",
+ rocks:"Granite, granodiorite, schist, gneiss",ph:[["Alex Strekeisen",AS+"pluto/biotite.php"],["Univ. of Geneva",AT+"biotite-1.html"]]},
+{n:"Chlorite",g:"Phyllosilicate",col:["green"],pleo:["weak","strong"],rel:["low","moderate","high"],d:.006,xpl:["g1"],anom:true,ext:["parallel","inclined"],tw:["none"],clv:["one"],hab:["flaky","fibrous"],opt:"Biaxial (±)",
+ key:"Green, with one perfect cleavage. Birefringence low (0–0.02), often with anomalous interference colors such as indigo-violet or olive brown. Pleochroism increases with iron content.",
+ vs:"Distinguished from muscovite and biotite by green color, pleochroism and weak birefringence. Serpentine is less pleochroic and has lower refractive indices.",
+ rocks:"Greenschist, altered basalt, slate, phyllite",ph:[["Alex Strekeisen",AS+"pluto/chlorite.php"],["Univ. of Geneva",AT+"chlorite-1.html"]]},
+{n:"Hornblende",g:"Amphibole",col:["green","brown"],pleo:["strong"],rel:["moderate","high"],d:.020,xpl:["y1","o2"],masked:true,ext:["inclined"],tw:["simple","none"],clv:["two60"],hab:["prismatic","euhedral"],opt:"Biaxial (−)",
+ key:"Distinctly colored and pleochroic in shades of green, yellow-green, blue-green and brown. Amphibole cleavages intersect at 56° and 124°, best seen in basal sections. Extinction 12–34° in elongate sections. Highest colors usually upper 1st to lower 2nd order, often masked by the mineral's color.",
+ vs:"Tremolite is light colored with lower indices; actinolite has lower indices and a lower extinction angle. Biotite has one cleavage. Augite has cleavages at about 87°/93°.",
+ rocks:"Diorite, andesite, granodiorite, amphibolite",ph:[["Athabasca University",'https://athabascau-i2.arcabc.ca/rocks-and-minerals/hornblende-thin-section']]},
+{n:"Actinolite / tremolite",g:"Amphibole",col:["colorless","green"],pleo:["none","weak","strong"],rel:["moderate","high"],d:.022,xpl:["y1","o2"],ext:["inclined","parallel"],tw:["none","simple","polysynthetic"],clv:["two60"],hab:["needle","prismatic"],opt:"Biaxial (−)",
+ key:"Colorless (tremolite) to pale or deep green (actinolite), with pleochroism that strengthens with iron content. Amphibole cleavages at 56°/124°. Inclined extinction about 10–21° in elongate sections. Colors up to upper 1st or low 2nd order.",
+ vs:"Hornblende has higher indices and a larger extinction angle. Colorless richterite can be hard to tell from tremolite.",
+ rocks:"Greenschist, metamorphosed mafic rocks, marble (tremolite)",ph:[["Univ. of Geneva (actinolite)",AT+"actinolite.html"]]},
+{n:"Glaucophane",g:"Amphibole",col:["colorless","blue"],pleo:["strong"],rel:["moderate","high"],d:.021,xpl:["y1","o2"],masked:true,ext:["inclined","parallel"],tw:["none"],clv:["two60"],hab:["prismatic","needle"],opt:"Biaxial (−)",
+ key:"Distinctly pleochroic from colorless to blue, with amphibole cleavages at 56°/124°. Birefringence about 0.021, partly masked by color.",
+ vs:"Riebeckite is another distinctly pleochroic blue amphibole. Tourmaline has no cleavage.",
+ rocks:"Blueschist",ph:[["Alex Strekeisen",AS+"meta/glaucophane.php"]]},
+{n:"Augite",g:"Clinopyroxene",col:["colorless","green","brown"],pleo:["none","weak"],rel:["high"],d:.026,xpl:["o2"],ext:["inclined","symmetric"],tw:["polysynthetic","none"],clv:["two90"],hab:["prismatic","euhedral","anhedral"],opt:"Biaxial (+)",
+ key:"High relief. Colorless, gray, pale green or pale brown, with no or weak pleochroism. Two cleavages at about 87°/93°. Extinction 35–48° in elongate sections, symmetrical in basal sections. Colors up to mid 2nd order (birefringence 0.018–0.034). Lamellar twins can combine into a herringbone pattern.",
+ vs:"Orthopyroxene has lower birefringence and parallel extinction. Amphiboles have cleavages at 56°/124°. Olivine has no cleavage and higher birefringence.",
+ rocks:"Basalt, gabbro, andesite",ph:[["Alex Strekeisen (clinopyroxene)",AS+"pluto/clinopyroxene.php"],["Univ. of Geneva",AT+"augite.html"]]},
+{n:"Orthopyroxene",g:"Orthopyroxene",col:["colorless","pink","green"],pleo:["none","weak"],rel:["high"],d:.010,xpl:["g1","y1"],ext:["parallel","symmetric"],tw:["none","polysynthetic"],clv:["two90"],hab:["prismatic","anhedral"],opt:"Biaxial (±)",
+ key:"High relief, pyroxene cleavages at about 88°, parallel extinction and 1st-order colors (birefringence about 0.009–0.011). Pink-to-green pleochroism is diagnostic when present. Fine exsolution lamellae are common.",
+ vs:"Clinopyroxene has inclined extinction and higher birefringence. Andalusite can look like enstatite but lacks pyroxene cleavage.",
+ rocks:"Gabbro, norite, peridotite, andesite, granulite",ph:[]},
+{n:"Olivine",g:"Nesosilicate",col:["colorless","yellow"],pleo:["none"],rel:["high"],d:.038,xpl:["o2","o3"],ext:["parallel"],tw:["none"],clv:["none"],hab:["anhedral","euhedral"],opt:"Biaxial (±)",
+ key:"Colorless to pale yellow (darker with more iron), high relief, high birefringence (about 0.033–0.042). Recognized by its distinctive irregular fractures, lack of cleavage and its alteration products.",
+ vs:"Clinopyroxenes have somewhat lower birefringence and recognizable cleavage.",
+ rocks:"Basalt, gabbro, peridotite, dunite",ph:[["Alex Strekeisen",AS+"pluto/olivine.php"]]},
+{n:"Garnet",g:"Nesosilicate",col:["colorless","pink"],pleo:["none"],rel:["high","veryhigh"],d:0,xpl:["iso"],ext:[],tw:["none"],clv:["none"],hab:["euhedral","anhedral"],opt:"Isotropic",
+ key:"Isotropic: black in XPL at every angle. High positive relief. Colorless or a pale version of the hand-sample color. No cleavage, irregular fractures, no twinning.",
+ vs:"Spinel has a different crystal shape and darker color.",
+ rocks:"Garnet schist, gneiss, eclogite, amphibolite",ph:[["Alex Strekeisen",AS+"pluto/garnet.php"]]},
+{n:"Calcite",g:"Carbonate",col:["colorless"],pleo:["none"],rel:["twinkle"],d:.172,xpl:["hi"],ext:["symmetric","inclined"],tw:["polysynthetic"],clv:["rhomb"],hab:["anhedral"],opt:"Uniaxial (−)",
+ key:"Relief changes strongly as you rotate in PPL ('twinkling'). Extreme birefringence (0.172) gives creamy high-order colors. Rhombohedral cleavage (two directions at about 75°) and lamellar twinning. Extinction symmetrical or inclined to cleavage.",
+ vs:"Dolomite is more commonly euhedral and may be cloudy. Alizarin Red S stain turns calcite red and leaves dolomite unstained.",
+ rocks:"Limestone, marble, carbonatite, veins",ph:[["Univ. of Geneva",AT+"calcite.html"]]},
+{n:"Dolomite",g:"Carbonate",col:["colorless"],pleo:["none"],rel:["twinkle"],d:.180,xpl:["hi"],ext:["symmetric","inclined"],tw:["none","polysynthetic"],clv:["rhomb"],hab:["rhomb","anhedral"],opt:"Uniaxial (−)",
+ key:"Like calcite, with changing relief and extreme birefringence (about 0.18). More commonly euhedral rhombs than calcite, and may be cloudy or stained by iron oxides.",
+ vs:"Calcite stains red with Alizarin Red S; dolomite stays unstained. Dolomite also has higher refractive indices.",
+ rocks:"Dolostone, dolomitic marble",ph:[]},
+{n:"Epidote",g:"Sorosilicate",col:["yellow","green"],pleo:["weak","strong"],rel:["high"],d:.035,xpl:["o2","o3"],ext:["parallel","inclined"],tw:["none","simple"],clv:["one"],hab:["prismatic","anhedral"],opt:"Biaxial (−)",
+ key:"Pistachio yellow-green with high relief and bright interference colors (birefringence about 0.019–0.046). One good cleavage.",
+ vs:"Zoisite has parallel extinction. Clinozoisite is colorless with low, sometimes anomalous colors. Allanite is usually brown; piemontite is usually pink.",
+ rocks:"Greenschist, altered igneous rocks, skarn",ph:[["Alex Strekeisen",AS+"meta/epidote.php"]]},
+{n:"Clinozoisite / zoisite",g:"Sorosilicate",col:["colorless"],pleo:["none"],rel:["high"],d:.010,xpl:["g1","y1"],anom:true,ext:["inclined","parallel"],tw:["none","polysynthetic"],clv:["one"],hab:["prismatic","anhedral"],opt:"Biaxial (+)",
+ key:"Colorless, high relief, low birefringence (clinozoisite about 0.004–0.015, zoisite about 0.006–0.018), sometimes with anomalous blue or greenish-yellow colors. One perfect cleavage.",
+ vs:"Epidote is yellow-green with brighter colors.",
+ rocks:"Greenschist, amphibolite, altered plagioclase",ph:[["Univ. of Geneva (clinozoisite)",AT+"clinozoisite.html"]]},
+{n:"Kyanite",g:"Aluminosilicate",col:["colorless","blue"],pleo:["none","weak"],rel:["high"],d:.014,xpl:["g1","y1"],ext:["inclined"],tw:["none","simple"],clv:["twoX"],hab:["prismatic","lath"],opt:"Biaxial (−)",
+ key:"High relief, colorless to pale blue, bladed prisms. Low to moderate colors (birefringence about 0.012–0.016). Two cleavages that meet at about 79°. Inclined extinction (triclinic).",
+ vs:"Andalusite has parallel extinction and moderate relief. Sillimanite basal sections are diamond-shaped with one cleavage.",
+ rocks:"Medium- to high-pressure pelitic schist and gneiss",ph:[["Alex Strekeisen",AS+"meta/kyanite.php"]]},
+{n:"Sillimanite",g:"Aluminosilicate",col:["colorless"],pleo:["none"],rel:["high"],d:.021,xpl:["y1","o2"],ext:["parallel"],tw:["none"],clv:["one"],hab:["needle","prismatic"],opt:"Biaxial (+)",
+ key:"Elongate prisms or fine fibers ('fibrolite'), high relief. One perfect cleavage; diamond-shaped basal sections have the cleavage parallel to the long axis. Birefringence is listed as about 0.020–0.022, though some sources describe its colors as low (pale yellow). Orthorhombic, so elongate sections extinguish parallel.",
+ vs:"Andalusite has lower birefringence and more distinct cleavage. Kyanite has two cleavages at about 79°.",
+ rocks:"High-grade pelitic schist and gneiss, hornfels",ph:[["Alex Strekeisen",AS+"meta/sillimanite.php"]]},
+{n:"Andalusite",g:"Aluminosilicate",col:["colorless","pink"],pleo:["none","weak"],rel:["moderate"],d:.011,xpl:["g1","y1"],ext:["parallel","symmetric"],tw:["none"],clv:["two90"],hab:["prismatic","euhedral"],opt:"Biaxial (−)",
+ key:"Moderate relief, colorless or rarely pink with weak pleochroism. 1st-order gray, white or yellow (birefringence about 0.009–0.013). Parallel extinction, length fast. Two cleavages nearly at right angles, rarely visible. The variety chiastolite contains a dark cross of inclusions.",
+ vs:"Andalusite resembles enstatite but lacks the pyroxene cleavage. Sillimanite has higher birefringence.",
+ rocks:"Contact-metamorphic hornfels, low-pressure schist",ph:[["Alex Strekeisen",AS+"meta/andalusite.php"],["Univ. of Geneva",AT+"andalusite.html"]]},
+{n:"Staurolite",g:"Nesosilicate",col:["yellow"],pleo:["weak","strong"],rel:["high"],d:.012,xpl:["g1","y1"],ext:["parallel"],tw:["none","cross"],clv:["none"],hab:["euhedral","prismatic"],opt:"Biaxial (+)",
+ key:"Pleochroic from colorless to golden yellow. Low 1st-order gray-yellow colors (birefringence about 0.009–0.015). Often porphyroblasts with inclusions and internal foliation. Twins at 60° and cross-shaped (90°) twins occur.",
+ vs:"Epidote is greener with brighter colors. Titanite has extreme birefringence. Tourmaline is darker when perpendicular to the polarizer.",
+ rocks:"Medium-grade pelitic schist",ph:[["Alex Strekeisen",AS+"meta/staurolite.php"]]},
+{n:"Cordierite",g:"Cyclosilicate",col:["colorless","blue"],pleo:["none","weak"],rel:["low"],neg:true,d:.010,xpl:["g1","y1"],ext:["inclined","parallel"],tw:["sector","polysynthetic","none"],clv:["none"],hab:["anhedral","euhedral"],opt:"Biaxial (±)",
+ key:"Looks like quartz or feldspar: colorless, low relief, 1st-order gray to white (never above 1st-order red). Often complexly twinned (polysynthetic or cyclic star patterns in basal sections). Alters readily to yellow-greenish 'pinite'.",
+ vs:"Quartz is uniaxial and lacks twinning. Plagioclase twins are straight parallel stripes.",
+ rocks:"Hornfels, granulite, high-temperature low-pressure gneiss",ph:[["Alex Strekeisen",AS+"meta/cordierite.php"],["Univ. of Geneva",AT+"cordierite.html"]]},
+{n:"Tourmaline",g:"Cyclosilicate",col:["brown","green","blue"],pleo:["strong"],rel:["moderate"],d:.025,xpl:["o2","o3"],masked:true,ext:["parallel"],tw:["none"],clv:["none"],hab:["prismatic","needle","euhedral"],opt:"Uniaxial (−)",
+ key:"Strongly pleochroic and darker when its long dimension is at right angles to the lower polarizer, the opposite of biotite. No cleavage. Medium relief. Stubby to needle-like euhedral prisms.",
+ vs:"Biotite has a perfect cleavage and is darker when its cleavage is parallel to the polarizer. Colored apatite is also darker when parallel.",
+ rocks:"Granite, pegmatite, schist, detrital grains in sandstone",ph:[["Alex Strekeisen",AS+"pluto/tourmaline.php"]]},
+{n:"Zircon",g:"Accessory",col:["colorless"],pleo:["none"],rel:["veryhigh"],d:.050,xpl:["o3"],ext:["parallel"],tw:["none"],clv:["none"],hab:["euhedral"],opt:"Uniaxial (+)",
+ key:"Small euhedral prisms with very high relief and high birefringence (about 0.047–0.055). May produce pleochroic halos in a surrounding mineral such as biotite.",
+ vs:"Can be mistaken for xenotime (higher birefringence), monazite (colored, biaxial) or rutile. Apatite has much lower birefringence.",
+ rocks:"Granite, gneiss, detrital in sandstone",ph:[["Alex Strekeisen",AS+"pluto/zircon.php"]]},
+{n:"Apatite",g:"Accessory",col:["colorless"],pleo:["none"],rel:["moderate"],d:.004,xpl:["g1"],ext:["parallel"],tw:["none"],clv:["none"],hab:["needle","euhedral"],opt:"Uniaxial (−)",
+ key:"Small needles or hexagonal basal sections with moderate relief and very low 1st-order gray colors (birefringence about 0.001–0.007). Parallel extinction, length fast.",
+ vs:"Distinguished from garnet by its weak birefringence. Colored apatite is darker when its long axis is parallel to the polarizer, unlike tourmaline.",
+ rocks:"Accessory in most igneous rocks",ph:[["Alex Strekeisen",AS+"pluto/apatite.php"],["Univ. of Geneva",AT+"apatite.html"]]},
+{n:"Titanite (sphene)",g:"Accessory",col:["brown","yellow"],pleo:["weak","strong"],rel:["veryhigh"],d:.13,xpl:["hi"],masked:true,ext:["inclined"],tw:["simple","none"],clv:["none"],hab:["euhedral"],opt:"Biaxial (+)",
+ key:"Yellow-brown with very high relief and extreme birefringence (about 0.10–0.16). Wedge-shaped (lozenge) cross sections make it easy to recognize.",
+ vs:"Extreme birefringence gives upper-order white interference colors, unlike other brown minerals here.",
+ rocks:"Granodiorite, syenite, amphibolite",ph:[["Alex Strekeisen",AS+"pluto/titanite.php"]]},
+{n:"Serpentine",g:"Phyllosilicate",col:["colorless","green"],pleo:["none","weak"],rel:["low"],d:.006,xpl:["g1"],ext:["parallel"],tw:["none"],clv:["none"],hab:["fibrous"],opt:"Biaxial (−)",
+ key:"Colorless to pale green with low 1st-order gray colors (antigorite birefringence about 0.005–0.006). Commonly forms a mesh texture where it replaces olivine; cross-fiber chrysotile occurs in veins. The varieties are hard to tell apart without X-ray diffraction.",
+ vs:"Chlorite is more strongly pleochroic. Fibrous amphiboles have higher indices and birefringence.",
+ rocks:"Serpentinite, altered peridotite",ph:[]},
+{n:"Nepheline",g:"Feldspathoid",col:["colorless"],pleo:["none"],rel:["low"],d:.004,xpl:["g1"],ext:["parallel"],tw:["none"],clv:["none"],hab:["euhedral","anhedral"],opt:"Uniaxial (−)",
+ key:"Colorless, low relief, very low gray colors (birefringence about 0.003–0.004). Uniaxial negative.",
+ vs:"Resembles the feldspars but lacks good cleavage and twinning and has lower birefringence. Quartz is uniaxial positive.",
+ rocks:"Nepheline syenite, phonolite, alkaline basalt",ph:[]},
+{n:"Leucite",g:"Feldspathoid",col:["colorless"],pleo:["none"],rel:["low"],neg:true,d:.001,xpl:["iso","g1"],ext:[],tw:["polysynthetic","sector"],clv:["none"],hab:["euhedral"],opt:"Pseudocubic",
+ key:"Euhedral, pseudocubic crystals with nearly zero birefringence (about 0.001), so nearly black in XPL, with common repeated twinning.",
+ vs:"Analcime looks similar. Garnet has high relief.",
+ rocks:"Potassic volcanic rocks",ph:[["Alex Strekeisen",AS+"pluto/leucite.php"]]},
+{n:"Volcanic glass",g:"Glass",col:["colorless","brown"],pleo:["none"],rel:["low"],neg:true,d:0,xpl:["iso"],ext:[],tw:["none"],clv:["none"],hab:["anhedral"],opt:"Isotropic",
+ key:"Isotropic and amorphous (non-crystalline): the product of rapidly cooled, quenched magma.",
+ vs:"Garnet is isotropic too but has high relief.",
+ rocks:"Pumice, tachylite, Pele's tears",ph:[]},
+{n:"Opaque minerals",g:"Oxides / sulfides",col:["opaque"],pleo:["none"],rel:[],d:0,xpl:["opq"],ext:[],tw:["none"],clv:["none"],hab:["euhedral","anhedral"],opt:"Opaque",
+ key:"Black in both PPL and XPL. Identifying them (magnetite, ilmenite, pyrite and others) requires reflected light.",
+ vs:"Use reflected light to tell opaque minerals apart.",
+ rocks:"Nearly every rock",ph:[]},
+{n:"Glauconite",g:"Phyllosilicate",col:["green"],pleo:["weak","strong"],rel:["moderate"],d:.026,xpl:["o2"],masked:true,ext:["parallel"],tw:["none"],clv:["one"],hab:["pellet","flaky"],opt:"Biaxial (−)",
+ key:"Green, pleochroic, moderate relief (birefringence about 0.020–0.032, masked by color). Usually rounded sand-size pellets. An authigenic mineral that forms mainly in marine shelf settings with slow sediment accumulation.",
+ vs:"Chlorite has lower birefringence and often anomalous colors.",
+ rocks:"Greensand, marine sandstone and limestone",ph:[]}
+];
+
+/* Approximate interference colors (Michel-Lévy) for retardation in nm. Colors are a visual guide, not calibrated. */
+const ML_STOPS=[[0,"#000000"],[40,"#3a3a3a"],[100,"#707070"],[150,"#9a9a9a"],[220,"#d6dce4"],[260,"#ececec"],[300,"#f2ecc8"],[350,"#efe08a"],[420,"#f2c04a"],[470,"#e8963a"],[520,"#d8543c"],[560,"#a8326a"],[590,"#6a2c90"],[640,"#3a3ab8"],[700,"#2c6fd0"],[760,"#3ca6b8"],[830,"#58c070"],[900,"#b8d250"],[960,"#e8d64a"],[1020,"#f0a850"],[1080,"#e86a6a"],[1130,"#b0508c"],[1170,"#7a4aa8"],[1220,"#4c70c0"],[1300,"#46a8b0"],[1370,"#62c088"],[1450,"#a8d07a"],[1530,"#e0c88a"],[1600,"#e8a0a0"],[1650,"#d88ab0"],[1720,"#a8a8cc"],[1800,"#98c8b8"],[1900,"#c8dcc0"],[2000,"#e6d8cc"]];
+const ML_ORDERS=[[0,"1st"],[551,"2nd"],[1128,"3rd"],[1652,"4th"]];
+
+const W="https://en.wikipedia.org/wiki/";
+const TEXTURES=[
+{k:"Igneous",n:"Porphyritic",d:"A distinct difference in crystal size: larger crystals (phenocrysts) in a finer groundmass.",m:"Slow cooling at depth grows the large crystals, then rapid cooling at shallower depth or on eruption forms the fine groundmass.",w:"Common in volcanic rocks such as andesite and basalt",src:[["Wikipedia: Porphyritic",W+"Porphyritic"]]},
+{k:"Igneous",n:"Ophitic",d:"A variety of poikilitic texture in which plagioclase laths are enclosed in pyroxene, olivine or other minerals.",m:"Large crystals (for example augite) enclose smaller, earlier plagioclase laths.",w:"Very characteristic of many diabases (dolerites)",src:[["Wikipedia: Ophitic texture",W+"Ophitic_texture"]]},
+{k:"Igneous",n:"Poikilitic",d:"Large, later-formed crystals (oikocrysts) surround smaller, earlier-formed crystals (chadacrysts) of other minerals.",m:"The host crystal grew later than the grains it encloses.",w:"Diabase, peridotite (pyroxene or hornblende around olivine)",src:[["Wikipedia: Poikilitic texture",W+"Poikilitic_texture"]]},
+{k:"Igneous",n:"Perthitic",d:"Lamellae of albite (Na-feldspar) within a host of orthoclase or microcline (K-feldspar).",m:"Exsolution in an originally homogeneous alkali feldspar.",w:"Granite, syenite",ph:[["Alex Strekeisen",AS+"pluto/perthite.php"],["Smith College",'https://www.science.smith.edu/geosciences/petrology/petrography/perthite/perthite.html']]},
+{k:"Igneous",n:"Myrmekite",d:"A vermicular (worm-like) intergrowth of quartz in sodic plagioclase, associated with K-feldspar.",m:"Generally attributed to metasomatism, usually alongside deformation; exsolution during cooling has also been proposed.",w:"Granite, gneiss, mylonite, charnockite",ph:[["Alex Strekeisen",AS+"pluto/myrmekite.php"]],src:[["Wikipedia: Myrmekite",W+"Myrmekite"]]},
+{k:"Igneous",n:"Granophyric",d:"Angular intergrowths of quartz and alkali feldspar. Similar to micrographic texture and to the coarser graphic intergrowths of pegmatite.",m:"Simultaneous crystallization of quartz and feldspar at the eutectic, or strong undercooling of the magma.",w:"Granophyre; graphic intergrowths in pegmatite",src:[["Wikipedia: Granophyre",W+"Granophyre"]]},
+{k:"Igneous",n:"Trachytic",d:"A groundmass made mainly of long, narrow, subparallel rods (laths) of sanidine.",m:"",w:"Trachyte",src:[["Wikipedia: Trachyte",W+"Trachyte"]]},
+{k:"Igneous",n:"Vesicular / amygdaloidal",d:"Gas holes (vesicles); cavities later filled with minerals are amygdules.",m:"Dissolved gases escape as pressure drops in rising magma and are trapped as the lava solidifies.",w:"Pumice, scoria; amygdules typically in basalt or andesite",src:[["Wikipedia: Vesicular texture",W+"Vesicular_texture"]]},
+{k:"Igneous",n:"Glassy",d:"Amorphous, non-crystalline volcanic glass (isotropic in XPL).",m:"Rapid cooling (quenching) of magma. Silica-rich, water-poor magma forms glass most easily.",w:"Obsidian, pitchstone, pumice, tachylite",src:[["Wikipedia: Volcanic glass",W+"Volcanic_glass"]]},
+{k:"Igneous",n:"Zoning",d:"Changes in color or extinction angle from core to rim in a solid-solution mineral. Oscillatory zoning shows concentric rings of different extinction angle and interference color.",m:"Incomplete reaction between melt and crystal. Plagioclase is normally zoned from calcic cores to sodic rims; reverse zoning can record mixing with more primitive magma.",w:"Plagioclase in andesite, basalt, rhyolite; also pyroxene, olivine, hornblende",ph:[["Alex Strekeisen",AS+"vulc/zoning.php"]]},
+{k:"Metamorphic",n:"Slaty cleavage / schistosity",d:"Slaty cleavage is the very fine preferred orientation of clay or mica flakes in slate. Schistosity is the preferred orientation of larger mica flakes in schist.",m:"Foliation forms at right angles to the maximum principal stress.",w:"Slate, phyllite, schist",src:[["Wikipedia: Foliation",W+"Foliation_(geology)"]]},
+{k:"Metamorphic",n:"Gneissic banding",d:"Compositional bands in gneiss, typically lighter (felsic) and darker (mafic) layers.",m:"Segregation of mineral phases (metamorphic differentiation).",w:"Gneiss",src:[["Wikipedia: Foliation",W+"Foliation_(geology)"]]},
+{k:"Metamorphic",n:"Porphyroblastic",d:"Large metamorphic crystals (porphyroblasts) that grew within a finer-grained matrix.",m:"Growth in the solid state during metamorphism.",w:"Garnet and staurolite in mica schist",src:[["Wikipedia: Porphyroblast",W+"Porphyroblast"]]},
+{k:"Metamorphic",n:"Poikiloblastic",d:"Porphyroblasts containing small inclusions of other minerals.",m:"Inclusion trails compared with the matrix fabric help show whether a crystal grew before, during or after deformation; curved trails can record rotation.",w:"Garnet ('snowball' garnets), staurolite",src:[["Wikipedia: Porphyroblast",W+"Porphyroblast"]]},
+{k:"Metamorphic",n:"Granoblastic",d:"Roughly equal-sized, anhedral grains whose boundaries ideally meet at 120° triple junctions.",m:"",w:"Quartzite, marble, charnockite",src:[["Wikipedia: Granoblastic",W+"Granoblastic"]]},
+{k:"Metamorphic",n:"Mylonitic",d:"Fine-grained, compact rock with grain size reduced by recrystallization; asymmetric porphyroclasts can show shear sense.",m:"Large shear strain in ductile fault (shear) zones, mainly by crystal-plastic deformation.",w:"Mylonite in ductile shear zones",src:[["Wikipedia: Mylonite",W+"Mylonite"]]},
+{k:"Metamorphic",n:"Pressure shadows",d:"Paired, roughly triangular zones beside a larger rigid grain, stretched parallel to the foliation; called fringes when fibrous.",m:"Plastic flow or diffusive mass transfer moves material into the low-stress zones beside the rigid grain.",w:"Deformed rocks with rigid clasts or porphyroblasts",src:[["Wikipedia: Pressure shadow",W+"Pressure_shadow"]]},
+{k:"Metamorphic",n:"Symplectite / kelyphite",d:"Fine intergrowths of two or more minerals. Kelyphite is a symplectite rim formed by garnet breakdown.",m:"Breakdown reactions as pressure or temperature changed.",w:"Granulite, eclogite, garnet peridotite",ph:[["Alex Strekeisen (symplectite)",AS+"meta/symplectite.php"],["Alex Strekeisen (kelyphite)",AS+"meta/kelyphite.php"]]},
+{k:"Deformation",n:"Undulose extinction",d:"A grain does not go dark all at once; extinction sweeps across it as you rotate the stage.",m:"Plastic deformation by dislocations without recovery bends the crystal lattice.",w:"Common in deformed quartz",src:[["Wikipedia: Undulose extinction",W+"Undulose_extinction"]]}
+];
+
+/* Sedimentary structures. Sources: Wikipedia (Sedimentary structures; Way up structure; Hummocky cross-stratification;
+   Herringbone cross-stratification; Flaser bedding; Imbrication; Stromatolite); Univ. of Alberta EAS 233 primary structures notes. */
+const SED=[
+{n:"Cross-bedding (cross-stratification)",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Current",see:["section"],dg:"cross",
+ d:"Sets of inclined layers within a bed. Trough cross-beds have concave-up, scoop-shaped sets; planar (tabular) sets have flat bounding surfaces.",
+ f:"Migration of dunes (cross-bedding) or ripples (cross-lamination). Sediment moves up the gentle side of the bedform and avalanches down the steep side, so the inclined layers dip in the downcurrent direction.",
+ env:"Subaqueous dunes and sandbars, the shallow seafloor, desert dunes",
+ up:"Truncated at the top and tangential (curving into the base) at the bottom. Troughs are concave up. Truncation always happens up section.",
+ pc:"Yes. Foresets dip downcurrent."},
+{n:"Asymmetric (current) ripples",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"]],c:"Current",see:["surface","section"],dg:"crip",
+ d:"Small ripples with a gentle upstream (stoss) side and a steeper downstream (lee) side.",
+ f:"One-way currents, such as rivers or wind, in the lower flow regime.",
+ env:"Rivers and other one-way currents",
+ up:"Ripple troughs are rounded and crests are sharp or truncated.",
+ pc:"Yes. The steep side faces downcurrent."},
+{n:"Symmetric (wave) ripples",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"]],c:"Current",see:["surface","section"],dg:"wrip",
+ d:"Ripples with both sides of similar slope, often with sharp crests and rounded troughs.",
+ f:"Two-way, oscillating flow such as beach swash and backwash or wave action in shallow water.",
+ env:"Beaches and other shallow water with wave action",
+ up:"Crests are sharp and point up; troughs are rounded.",
+ pc:"No. Not used for current direction."},
+{n:"Graded bedding",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Current",see:["section"],dg:"grade",
+ d:"A bed that fines upward, from coarse grains at the base to fine grains at the top.",
+ f:"Grains settle out progressively as a sudden, sediment-laden flow wanes, such as a turbidity current or storm.",
+ env:"Turbidites (deep marine fans), storm beds",
+ up:"Coarse at the base, fine at the top. Use with care: reverse grading occurs in debris flows and some alluvial fans, so rely on it only when seen repeatedly.",
+ pc:"No."},
+{n:"Hummocky cross-stratification",src:[["Wikipedia: Hummocky cross-stratification","https://en.wikipedia.org/wiki/Hummocky_cross-stratification"]],c:"Current",see:["section"],dg:"hcs",
+ d:"Gently undulating laminae forming low mounds (hummocks) and hollows (swales) that cut across one another, with long wavelengths (about 1–5 m) and low heights.",
+ f:"Large storms, through combined one-way and oscillatory flow.",
+ env:"Shelf below fair-weather wave base and above storm wave base",
+ up:"Not commonly used.",
+ pc:"No. The mounds have no preferred orientation."},
+{n:"Herringbone cross-stratification",src:[["Wikipedia: Herringbone cross-stratification","https://en.wikipedia.org/wiki/Herringbone_cross-stratification"]],c:"Current",see:["section"],dg:"herring",
+ d:"Stacked cross-bed sets that dip in opposite directions, resembling a fish skeleton.",
+ f:"Currents that reverse direction, building cross-beds that dip one way, then the other.",
+ env:"Tidal flats and tidal channels (uncommon, since it needs roughly equal currents both ways)",
+ up:"Same as cross-bedding.",
+ pc:"Shows two opposite flow directions."},
+{n:"Flaser and lenticular bedding",src:[["Wikipedia: Flaser bedding","https://en.wikipedia.org/wiki/Flaser_bedding"]],c:"Current",see:["section"],dg:"flaser",
+ d:"Flaser bedding is mostly sand ripples with thin mud drapes. Lenticular bedding is the mud-dominated counterpart, with isolated sand lenses in mud.",
+ f:"Intermittent flow: ripples form during active flow and mud settles during quieter periods.",
+ env:"Mainly tidal environments; less often rivers",
+ up:"Not a primary way-up indicator.",
+ pc:"Ripple cross-lamination within it can show flow direction."},
+{n:"Mud cracks (desiccation cracks)",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Surface",see:["surface","section"],dg:"mud",
+ d:"Polygonal cracks on a bedding surface; in cross section, V-shaped cracks filled by the overlying sediment.",
+ f:"Wet mud shrinks and cracks as it dries in the air.",
+ env:"Floodplains, playa lakes, tidal flats: anywhere mud is exposed",
+ up:"Cracks narrow downward to a point (V shape) and are filled from above. Crack edges curl upward.",
+ pc:"No."},
+{n:"Raindrop impressions",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"]],c:"Surface",see:["surface"],dg:null,
+ d:"Small circular pits on a bedding surface.",
+ f:"Raindrops striking exposed, soft sediment.",
+ env:"Exposed (subaerial) sediment",
+ up:null,pc:"No."},
+{n:"Flute casts",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Sole mark",see:["base"],dg:"flute",
+ d:"Scoop-shaped bulges on the base of a sandstone bed, deep and rounded at one end and tapering at the other.",
+ f:"Currents scour scoops into soft mud, which are then filled by the overlying sand.",
+ env:"Sand rapidly deposited on mud, common in turbidites",
+ up:"They occur on the bottom of beds, bulging downward.",
+ pc:"Yes. The rounded, deep end points upcurrent; the tapered end points downcurrent."},
+{n:"Groove casts and tool marks",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Sole mark",see:["base"],dg:null,
+ d:"Long straight ridges or marks on the base of a bed.",
+ f:"Objects dragged by a current cut grooves into soft mud, which are then filled by the overlying sand.",
+ env:"Sand rapidly deposited on mud, common in turbidites",
+ up:"They occur on the bottom of beds.",
+ pc:"Gives the flow axis (the line of flow, not which way along it)."},
+{n:"Load casts and flame structures",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Soft-sediment deformation",see:["base","section"],dg:"load",
+ d:"Rounded bulges on the base of a sandstone bed (load casts) with narrow tongues of mud pushed up between them (flames).",
+ f:"Denser sand sinks into less dense, wet mud below it.",
+ env:"Sand deposited rapidly on soft, wet mud",
+ up:"Load casts bulge down; flames point up into the overlying sand.",
+ pc:"No."},
+{n:"Convolute bedding",src:[["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Soft-sediment deformation",see:["section"],dg:"convolute",
+ d:"Laminae deformed into chaotic folds within an otherwise undeformed bed.",
+ f:"Loosely packed sand settles and escaping water fluidizes it, deforming the laminations.",
+ env:"Rapidly deposited, water-saturated sand",
+ up:"Only if the folds are truncated by younger, undeformed laminations.",
+ pc:"No."},
+{n:"Slump folds",src:[["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Soft-sediment deformation",see:["section"],dg:null,
+ d:"Tight folds in a sediment layer bounded by undeformed beds.",
+ f:"Sediment on a slope fails and moves downslope under gravity.",
+ env:"Sloping depositional surfaces",
+ up:"Not effective as way-up indicators and easily confused with tectonic folds.",
+ pc:"Can indicate paleoslope direction once way-up is known from other structures."},
+{n:"Imbrication",src:[["Wikipedia: Imbrication","https://en.wikipedia.org/wiki/Imbrication_(sedimentology)"]],c:"Current",see:["section","surface"],dg:"imbr",
+ d:"Flat pebbles or cobbles overlapping like shingles.",
+ f:"Clasts rolling along a channel base come to rest with their downstream end raised on the clast ahead, so they tilt against the flow.",
+ env:"Conglomerates: channel bedload, alluvial fans; also glacial and deltaic gravels",
+ up:null,
+ pc:"Yes, in channels clasts dip upstream. Glacial and deltaic gravels can differ, so know the setting."},
+{n:"Parting lineation",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"]],c:"Current",see:["surface"],dg:null,
+ d:"Subtly aligned mineral grains on plane-bedded surfaces.",
+ f:"Flow over plane beds in the lower part of the upper flow regime.",
+ env:"Plane-bedded sands",
+ up:null,pc:"Not covered in the sources used here."},
+{n:"Bioturbation and trace fossils",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Biogenic",see:["surface","section"],dg:null,
+ d:"Burrows, trails and tracks that disturb or cut through bedding.",
+ f:"Organisms living in or moving across the sediment.",
+ env:"Common in marine sediments",
+ up:"Some are way-up indicators, such as U-shaped burrows and root traces.",
+ pc:"No."},
+{n:"Stromatolites",src:[["Wikipedia: Stromatolite","https://en.wikipedia.org/wiki/Stromatolite"]],c:"Biogenic",see:["section"],dg:"strom",
+ d:"Layered, often domal sedimentary structures built by microbial mats.",
+ f:"Photosynthetic microbes such as cyanobacteria trap and bind sediment in stacked sheets, growing upward toward light.",
+ env:"Shallow water; modern examples mainly in hypersaline lakes and marine lagoons, such as Shark Bay, Western Australia",
+ up:null,pc:"No."},
+{n:"Geopetal structures",src:[["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"]],c:"Biogenic",see:["section"],dg:"geopetal",
+ d:"A cavity, such as inside a shell, partly filled with sediment at the bottom and with cement (for example calcite) above.",
+ f:"Sediment settles to the floor of the cavity under gravity, and cement later fills the remaining space.",
+ env:"Fossiliferous limestones; vesicles in lavas can behave similarly",
+ up:"The sediment fill marks the bottom, and its surface records the original horizontal and later tilt.",
+ pc:"No."},
+{n:"Bedding and lamination",src:[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["U. Alberta EAS 233 notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"]],c:"Bedding",see:["section"],dg:null,
+ d:"Layers of sediment that differ in grain size, composition or color; laminae are under 1 cm thick, beds are thicker.",
+ f:"Changes in sediment supply or flow conditions during deposition.",
+ env:"All sedimentary environments",
+ up:null,pc:"No."}
+];
+const SED_SRC=[["Wikipedia: Sedimentary structures","https://en.wikipedia.org/wiki/Sedimentary_structures"],["Wikipedia: Way up structure","https://en.wikipedia.org/wiki/Way_up_structure"],["Univ. of Alberta EAS 233: Primary structures notes","https://courses.eas.ualberta.ca/eas233/0809winter/primarystructuresnotes.pdf"],["Wikipedia: Hummocky cross-stratification","https://en.wikipedia.org/wiki/Hummocky_cross-stratification"],["Wikipedia: Herringbone cross-stratification","https://en.wikipedia.org/wiki/Herringbone_cross-stratification"],["Wikipedia: Flaser bedding","https://en.wikipedia.org/wiki/Flaser_bedding"],["Wikipedia: Imbrication","https://en.wikipedia.org/wiki/Imbrication_(sedimentology)"],["Wikipedia: Stromatolite","https://en.wikipedia.org/wiki/Stromatolite"]];
+const MIN_SRC=[["OpticMin, ATHENA, Univ. of Geneva (P. Perroud)","https://athena.unige.ch/athena/mineral/optical_mineralogy/opticmin_search.html"],["Alex Strekeisen thin-section collection","https://www.alexstrekeisen.it/english/index.php"],["Distinguishing features of minerals (UT Arlington)","https://bpb-us-e1.wpmucdn.com/websites.uta.edu/dist/9/4733/files/2021/06/distin_features_minerals-1.pdf"],["MIT OCW 12.109 amphibole lab","https://ocw.iti.hr/courses/earth-atmospheric-and-planetary-sciences/12-109-petrology-fall-2005/labs/amphibol1.pdf"],["SEPM Strata: carbonate staining","https://sepmstrata.org/page.aspx?pageid=197"],["Wikipedia mineral pages (infobox optical data)","https://en.wikipedia.org/wiki/Optical_mineralogy"],["Athabasca University rocks and minerals","https://athabascau-i2.arcabc.ca/rocks-and-minerals/hornblende-thin-section"],["Smith College petrography: perthite","https://www.science.smith.edu/geosciences/petrology/petrography/perthite/perthite.html"]];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- property groups ---------- */
+const SW={colorless:"#ffffff",brown:"#8a5a2b",green:"#5c8a3c",blue:"#6b78c8",yellow:"#d9b23a",pink:"#e7a3b4",opaque:"#111111"};
+const GROUPS={
+ ppl:[
+  {id:"col",t:"Color",o:[["colorless","Colorless"],["brown","Brown"],["green","Green"],["blue","Blue / lavender"],["yellow","Yellow"],["pink","Pink"],["opaque","Opaque (black)"]]},
+  {id:"pleo",t:"Pleochroism (color change on rotation)",o:[["none","None"],["weak","Weak"],["strong","Strong"]]},
+  {id:"rel",t:"Relief",o:[["low","Low"],["neg","Negative (below the mount)"],["moderate","Moderate"],["high","High"],["veryhigh","Very high"],["twinkle","Changes on rotation"]]},
+  {id:"clv",t:"Cleavage",o:[["none","None"],["one","One"],["two90","Two at ~90°"],["two60","Two at 56° / 124°"],["twoX","Two at another angle"],["rhomb","Rhombohedral"]]},
+  {id:"hab",t:"Shape",o:[["lath","Laths / tabular"],["anhedral","Anhedral / equant"],["euhedral","Euhedral"],["prismatic","Prismatic"],["needle","Needles / fibrous"],["flaky","Flakes"],["rhomb","Rhombs"],["pellet","Pellets"]]}
+ ],
+ xpl:[
+  {id:"xpl",t:"Highest interference color",o:[["iso","Black at all angles"],["g1","1st-order gray–white"],["y1","1st-order yellow–red"],["o2","2nd-order blues, greens"],["o3","3rd-order"],["hi","Creamy high-order"],["anom","Anomalous (inky blue / brown)"]]},
+  {id:"ext",t:"Extinction",o:[["parallel","Parallel"],["inclined","Inclined"],["symmetric","Symmetric to cleavage"],["undulose","Undulose (sweeping)"],["birdseye","Bird's-eye"]]},
+  {id:"tw",t:"Twinning",o:[["none","None"],["simple","Simple (two halves)"],["polysynthetic","Polysynthetic stripes"],["tartan","Tartan grid"],["sector","Sector / wedge"],["cross","Cross-shaped"]]}
+ ]};
+const ALLG=[...GROUPS.ppl,...GROUPS.xpl];
+let sel=ls.get("tsid-sel",{});
+function vals(m,g){switch(g){
+  case "col":return m.col;case "pleo":return m.pleo;case "rel":return [...m.rel,...(m.neg?["neg"]:[])];
+  case "clv":return m.clv;case "hab":return m.hab.map(h=>h==="tabular"?"lath":h==="fibrous"?"needle":h);
+  case "xpl":{const v=[...m.xpl];if(m.anom)v.push("anom");if(m.col.includes("opaque"))v.push("iso");return v}
+  case "ext":return m.ext;case "tw":return m.tw}return []}
+const label=(g,v)=>(ALLG.find(x=>x.id===g)?.o.find(o=>o[0]===v)||[,v])[1];
+function score(m){let hit=[],miss=[],n=0;
+  for(const g of Object.keys(sel)){const s=sel[g];if(!s||!s.length)continue;n++;const mv=vals(m,g);const ok=s.filter(x=>mv.includes(x));
+    if(ok.length)hit.push(...ok.map(x=>label(g,x)));else miss.push(ALLG.find(x=>x.id===g).t.split(" (")[0]+": "+(mv.length?mv.map(v=>label(g,v)).join(", "):"n/a"))}
+  return {n,hit,miss,s:n?(n-miss.length)/n:0}}
+
+function buildFilters(){
+  for(const side of ["ppl","xpl"]){const host=$(side==="ppl"?"fPPL":"fXPL");host.innerHTML="";
+    GROUPS[side].forEach(g=>{const d=document.createElement("div");d.className="grp";d.innerHTML=`<span class="lbl">${esc(g.t)}</span><div class="chips"></div>`;
+      g.o.forEach(([v,t])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed",!!sel[g.id]?.includes(v));
+        b.innerHTML=(g.id==="col"?`<span class="sw" style="background:${SW[v]}"></span>`:"")+esc(t);
+        b.onclick=()=>{const a=new Set(sel[g.id]||[]);a.has(v)?a.delete(v):a.add(v);sel[g.id]=[...a];if(!sel[g.id].length)delete sel[g.id];ls.set("tsid-sel",sel);b.setAttribute("aria-pressed",a.has(v));results()};
+        d.querySelector(".chips").append(b)});host.append(d)})}}
+const PRESETS=[["Brown, one cleavage",{col:["brown"],pleo:["strong"],clv:["one"]}],["Striped twins",{col:["colorless"],tw:["polysynthetic"],rel:["low"]}],["Black in XPL",{xpl:["iso"],rel:["veryhigh"]}],["Twinkles on rotation",{rel:["twinkle"],xpl:["hi"]}],["Green, 56° cleavage",{col:["green"],clv:["two60"],pleo:["strong"]}]];
+function buildPresets(){PRESETS.forEach(([t,p])=>{const b=document.createElement("button");b.type="button";b.className="btn";b.textContent=t;b.onclick=()=>{sel=JSON.parse(JSON.stringify(p));ls.set("tsid-sel",sel);buildFilters();results()};$("presets").append(b)})}
+$("reset").onclick=()=>{sel={};ls.set("tsid-sel",sel);buildFilters();results()};
+
+let open=null;
+function mlColor(r){for(let i=1;i<ML_STOPS.length;i++){if(r<=ML_STOPS[i][0]){const [a,ca]=ML_STOPS[i-1],[b,cb]=ML_STOPS[i];const f=(r-a)/(b-a);const p=h=>[1,3,5].map(k=>parseInt(h.slice(k,k+2),16));const x=p(ca),y=p(cb);return "#"+x.map((v,j)=>Math.round(v+(y[j]-v)*f).toString(16).padStart(2,"0")).join("")}}return ML_STOPS[ML_STOPS.length-1][1]}
+const grad=`linear-gradient(90deg,${ML_STOPS.map(([r,c])=>`${c} ${(r/2000*100).toFixed(1)}%`).join(",")})`;
+function results(){
+  const rs=MINERALS.map(m=>({m,...score(m)}));const any=rs[0].n>0;
+  if(any)rs.sort((a,b)=>b.s-a.s||b.hit.length-a.hit.length||a.m.n.localeCompare(b.m.n));else rs.sort((a,b)=>a.m.n.localeCompare(b.m.n));
+  const full=rs.filter(r=>r.n&&r.s===1).length;
+  $("rTitle").textContent=any?(full?`${full} full match${full>1?"es":""}`:"No full match yet"):"All minerals";
+  $("rNote").textContent=any?(full?"Ranked by how many of your observations fit.":"Showing the closest fits. Check the red items, or remove one observation."):"Tap properties on the left to narrow it down.";
+  const host=$("rList");host.innerHTML="";
+  rs.forEach((r,i)=>{const m=r.m;const card=document.createElement("article");card.className="min"+(any&&i===0&&r.s>0?" top":"");
+    const pct=Math.round(r.s*100);
+    card.innerHTML=`<button class="mbtn" type="button" aria-expanded="${open===m.n}"><span><span class="mname">${esc(m.n)}</span><br><span class="mgrp">${esc(m.g)} · ${esc(m.opt)}</span></span>
+      ${any?`<span class="score">${pct}% fit<span class="meter"><i style="width:${pct}%"></i></span></span>`:"<span></span>"}
+      ${any?`<span class="hits">${r.hit.map(h=>`<span class="hit">✓ ${esc(h)}</span>`).join("")}${r.miss.map(h=>`<span class="miss">✕ ${esc(h)}</span>`).join("")}</span>`:""}
+      <p class="mkey">${esc(m.key)}</p></button>`;
+    if(open===m.n){const r30=m.d*30000;const d=document.createElement("div");d.className="detail";
+      d.innerHTML=`<dl class="props">
+        <div><dt>Color (PPL)</dt><dd>${m.col.map(c=>label("col",c)).join(", ")}</dd></div>
+        <div><dt>Pleochroism</dt><dd>${m.pleo.map(v=>label("pleo",v)).join(" to ")}</dd></div>
+        <div><dt>Relief</dt><dd>${m.rel.map(v=>label("rel",v)).join(", ")||"n/a"}${m.neg?" (negative)":""}</dd></div>
+        <div><dt>Cleavage</dt><dd>${m.clv.map(v=>label("clv",v)).join(", ")}</dd></div>
+        <div><dt>Max birefringence</dt><dd>${m.col.includes("opaque")?"n/a":m.d?"≈ "+m.d.toFixed(3):"0 (isotropic)"}${m.masked?" · masked by color":""}${m.anom?" · anomalous colors":""}</dd></div>
+        <div><dt>Extinction</dt><dd>${m.ext.map(v=>label("ext",v)).join(", ")||"n/a"}</dd></div>
+        <div><dt>Twinning</dt><dd>${m.tw.map(v=>label("tw",v)).join(", ")}</dd></div>
+        <div><dt>Optic class</dt><dd>${esc(m.opt)}</dd></div></dl>
+        ${m.d&&!m.col.includes("opaque")?`<div><span class="lbl">Max color at 30 <span style="text-transform:none">µm</span> (${Math.round(r30)} nm)</span><div class="mini" style="background:${grad}"><b style="left:${Math.min(100,r30/2000*100)}%"></b></div></div>`:""}
+        <p><b>Tell it apart:</b> ${esc(m.vs)}</p><p><b>Found in:</b> ${esc(m.rocks)}</p>${photoLinks(m.ph,m.n.split(" /")[0].split(" (")[0]+" thin section")}`;card.append(d)}
+    card.querySelector(".mbtn").onclick=()=>{open=open===m.n?null:m.n;results()};host.append(card)});
+}
+
+/* ---------- Michel-Lévy ---------- */
+function drawML(){const t=+$("thk").value;$("thkV").textContent=t+" µm";const W=900,H=150,L=10,R=890,Y=60,BH=34,x=r=>L+(R-L)*Math.min(r,2000)/2000;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Interference color chart with minerals marked for ${t} micrometers"><defs><linearGradient id="mlg" x1="0" x2="1">${ML_STOPS.map(([r,c])=>`<stop offset="${r/2000}" stop-color="${c}"/>`).join("")}</linearGradient></defs>
+    <rect id="strip" x="${L}" y="${Y}" width="${R-L}" height="${BH}" rx="4" fill="url(#mlg)" style="cursor:crosshair"/>`;
+  ML_ORDERS.forEach(([r,n])=>{s+=`<line x1="${x(r)}" x2="${x(r)}" y1="${Y-4}" y2="${Y+BH+4}" stroke="currentColor" stroke-opacity=".5"/><text class="axis" x="${x(r)+4}" y="${Y+BH+18}">${n} order</text>`});
+  [0,500,1000,1500,2000].forEach(r=>{s+=`<text class="axis" x="${x(r)}" y="${H-4}" text-anchor="${r?r===2000?"end":"middle":"start"}">${r} nm</text>`});
+  const ms=MINERALS.filter(m=>m.d>0&&m.d<.07).map(m=>({m,r:m.d*t*1000})).sort((a,b)=>a.r-b.r);const lanes=[];
+  ms.forEach(o=>{const px=x(o.r);let lane=0;while(lanes[lane]!=null&&px-lanes[lane]<70)lane++;lanes[lane]=px;const y=Y-8-lane*13;
+    s+=`<line x1="${px}" x2="${px}" y1="${y+2}" y2="${Y}" stroke="currentColor" stroke-opacity=".45"/><text class="mk" x="${px}" y="${y}" text-anchor="middle">${esc(o.m.n.split(" ")[0])}</text>`});
+  s+=`</svg>`;$("mlChart").innerHTML=s;
+  const svg=$("mlChart").querySelector("svg");const top=Math.min(...lanes.map((_,i)=>Y-8-i*13))-12;svg.setAttribute("viewBox",`0 ${Math.min(0,top)} ${W} ${H-Math.min(0,top)}`);
+  $("strip").addEventListener("click",e=>{const b=e.target.getBoundingClientRect();const r=Math.round((e.clientX-b.left)/b.width*2000);const d=r/(t*1000);
+    const near=MINERALS.filter(m=>m.d>0&&!m.masked).map(m=>({m,diff:Math.abs(m.d-d)})).sort((a,b)=>a.diff-b.diff).slice(0,4);
+    $("mlRead").innerHTML=`<span style="display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;background:${mlColor(r)};box-shadow:inset 0 0 0 1px #0003"></span> Retardation ≈ <b>${r} nm</b> · birefringence ≈ <b>${d.toFixed(3)}</b> at ${t} µm<div class="near">Closest: ${near.map(n=>`<span class="chip">${esc(n.m.n)} (${n.m.d.toFixed(3)})</span>`).join("")}</div>`})}
+$("thk").oninput=drawML;
+
+/* ---------- textures ---------- */
+let txK="All";
+function drawTx(){const ks=["All",...new Set(TEXTURES.map(t=>t.k))];$("txFilter").innerHTML="";
+  ks.forEach(k=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=k;b.setAttribute("aria-pressed",k===txK);b.onclick=()=>{txK=k;drawTx()};$("txFilter").append(b)});
+  $("txList").innerHTML=TEXTURES.filter(t=>txK==="All"||t.k===txK).map(t=>`<article class="card tex"><span class="lbl">${esc(t.k)}</span><h3>${esc(t.n)}</h3><p>${esc(t.d)}</p>${t.m?`<p><b>What it means:</b> ${esc(t.m)}</p>`:""}<p class="note">Look for it in: ${esc(t.w)}</p>${photoLinks(t.ph,t.n.split(" /")[0]+" texture thin section")}${srcLinks(t.src||t.ph)}</article>`).join("")}
+
+/* ---------- photo links ---------- */
+const commons=q=>`https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(q)}&title=Special:MediaSearch&type=image`;
+function srcLinks(l){return l&&l.length?`<p class="src">Source: ${l.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join(" · ")}</p>`:""}
+function photoLinks(list,q){const a=(list||[]).map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`);
+  a.push(`<a href="${esc(commons(q))}" target="_blank" rel="noopener">Search Wikimedia Commons</a>`);return `<p class="photos"><b>Photo examples:</b> ${a.join(" · ")}</p>`}
+
+/* ---------- sedimentary structure schematics (simplified drawings, not to scale) ---------- */
+const DG={
+ cross:`<rect x="10" y="20" width="220" height="80" class="bed"/><path d="M10 50H230M10 100H230" class="ln"/>${[0,1,2,3,4,5,6].map(i=>`<path d="M${30+i*28} 20 Q${40+i*28} 44 ${70+i*28} 50" class="ln thin"/>`).join("")}${[0,1,2,3,4,5,6].map(i=>`<path d="M${20+i*28} 50 Q${30+i*28} 86 ${66+i*28} 100" class="ln thin"/>`).join("")}<path d="M150 112h50" class="arr" marker-end="url(#ah)"/><text x="148" y="116" text-anchor="end" class="t">current</text>`,
+ crip:`<path d="M10 70 ${[0,1,2,3].map(i=>`Q${40+i*55} 40 ${58+i*55} 44 L${65+i*55} 70`).join(" ")} H230 V100 H10Z" class="bed"/>${[0,1,2,3].map(i=>[0,1,2].map(k=>`<path d="M${50+i*55-k*6} ${48+k*4} L${62+i*55-k*6} 70" class="ln thin"/>`).join("")).join("")}<path d="M150 112h50" class="arr" marker-end="url(#ah)"/><text x="148" y="116" text-anchor="end" class="t">current</text>`,
+ wrip:`<path d="M10 70 ${[0,1,2,3,4].map(i=>`Q${25+i*44} 70 ${32+i*44} 46 Q${39+i*44} 70 ${54+i*44} 70`).join(" ")} H230 V100 H10Z" class="bed"/><path d="M90 112h30M120 112h-30" class="arr" marker-end="url(#ah)" marker-start="url(#ah)"/><text x="130" y="116" class="t">oscillating flow</text>`,
+ grade:`<rect x="70" y="10" width="100" height="100" class="bed"/>${Array.from({length:70},(_,i)=>{const y=14+((i*37)%92),r=(y/100)*3.2+.4;const x=74+((i*53)%92);return `<circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" class="dot"/>`}).join("")}<text x="178" y="20" class="t">fine</text><text x="178" y="106" class="t">coarse</text>`,
+ hcs:`<rect x="10" y="20" width="220" height="80" class="bed"/>${[0,1,2,3].map(k=>`<path d="M10 ${50+k*10} Q60 ${30+k*10} 110 ${50+k*10} T230 ${50+k*10}" class="ln thin"/>`).join("")}<path d="M10 88 Q60 70 110 92 T230 86" class="ln"/>`,
+ herring:`<rect x="10" y="20" width="220" height="80" class="bed"/><path d="M10 60H230" class="ln"/>${[0,1,2,3,4,5,6].map(i=>`<path d="M${24+i*30} 20 L${50+i*30} 60" class="ln thin"/><path d="M${50+i*30} 60 L${24+i*30} 100" class="ln thin"/>`).join("")}`,
+ flaser:`<rect x="10" y="20" width="220" height="80" class="bed"/>${[0,1,2].map(k=>`<path d="M10 ${44+k*22} ${[0,1,2,3,4].map(i=>`Q${28+i*44} ${30+k*22} ${46+i*44} ${36+k*22} L${54+i*44} ${44+k*22}`).join(" ")}" class="mud"/>`).join("")}<text x="232" y="112" text-anchor="end" class="t">dark = mud drapes</text>`,
+ mud:`<rect x="10" y="20" width="220" height="40" class="bed"/><rect x="10" y="60" width="220" height="40" class="mudb"/>${[40,95,150,200].map(x=>`<path d="M${x-7} 60 L${x} 92 L${x+7} 60Z" class="bed fill"/>`).join("")}<text x="232" y="16" text-anchor="end" class="t">sand fills cracks from above</text>`,
+ flute:`<rect x="10" y="20" width="220" height="50" class="bed"/>${[30,110,170].map(x=>`<path d="M${x} 70 Q${x+6} 96 ${x+22} 84 Q${x+40} 74 ${x+52} 70" class="bed fill"/>`).join("")}<rect x="10" y="70" width="220" height="30" class="mudb" style="opacity:.25"/><path d="M90 112h60" class="arr" marker-end="url(#ah)"/><text x="88" y="116" text-anchor="end" class="t">current</text><text x="232" y="16" text-anchor="end" class="t">base of sandstone bed</text>`,
+ load:`<rect x="10" y="20" width="220" height="50" class="bed"/><rect x="10" y="70" width="220" height="30" class="mudb"/>${[20,72,124,176].map(x=>`<path d="M${x} 70 Q${x+20} 98 ${x+42} 70" class="bed fill"/><path d="M${x+42} 72 Q${x+46} 56 ${x+50} 50 Q${x+52} 60 ${x+54} 72" class="mudb"/>`).join("")}`,
+ convolute:`<rect x="10" y="20" width="220" height="80" class="bed"/><path d="M10 30H230M10 90H230" class="ln thin"/>${[0,1,2].map(k=>`<path d="M10 ${48+k*12} C40 ${20+k*12} 60 ${80+k*12} 90 ${48+k*12} S140 ${20+k*12} 170 ${50+k*12} S210 ${70+k*12} 230 ${48+k*12}" class="ln thin"/>`).join("")}`,
+ imbr:`<path d="M10 92H230" class="ln"/>${[30,62,94,126,158,190].map(x=>`<ellipse cx="${x}" cy="80" rx="20" ry="7" transform="rotate(-24 ${x} 80)" class="clast"/>`).join("")}<path d="M90 112h60" class="arr" marker-end="url(#ah)"/><text x="88" y="116" text-anchor="end" class="t">current</text>`,
+ strom:`${[0,1,2,3,4,5].map(k=>`<path d="M30 ${100-k*2} Q120 ${70-k*12} 210 ${100-k*2}" class="ln thin"/>`).join("")}<path d="M10 100H230" class="ln"/>`,
+ geopetal:`<path d="M60 70 Q120 10 180 70 Q120 100 60 70Z" class="ln"/><path d="M66 74 Q120 98 174 74 L174 70 L66 70Z" class="mudb"/><path d="M66 70H174" class="ln"/><text x="186" y="52" class="t">cement</text><text x="186" y="84" class="t">sediment</text>`
+};
+function diagram(k){if(!k||!DG[k])return "";return `<figure class="dg"><svg viewBox="0 0 240 124" role="img" aria-label="Schematic diagram"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" class="ahd"/></marker></defs>${DG[k]}</svg><figcaption>Schematic, not to scale</figcaption></figure>`}
+
+/* ---------- sedimentary structures UI ---------- */
+let sedF={tell:null,see:null};
+const SEE={surface:"Top of a bed",section:"Cross section",base:"Base of a bed"};
+function drawSed(){
+  const tf=$("sedTell"),sf=$("sedSee");tf.innerHTML="";sf.innerHTML="";
+  [["up","Which way is up"],["pc","Flow direction"],["two","Two-way flow"]].forEach(([k,t])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=t;b.setAttribute("aria-pressed",sedF.tell===k);b.onclick=()=>{sedF.tell=sedF.tell===k?null:k;drawSed()};tf.append(b)});
+  Object.entries(SEE).forEach(([k,t])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=t;b.setAttribute("aria-pressed",sedF.see===k);b.onclick=()=>{sedF.see=sedF.see===k?null:k;drawSed()};sf.append(b)});
+  const list=SED.filter(s=>{if(sedF.see&&!s.see.includes(sedF.see))return false;
+    if(sedF.tell==="up")return !!s.up&&!/^Not /.test(s.up)&&!/^Same as/.test(s.up);
+    if(sedF.tell==="pc")return /^Yes|Gives the flow|Used as a paleo|can show flow|Shows two/i.test(s.pc);
+    if(sedF.tell==="two")return /two|oscillat|reverse|Intermittent/i.test(s.f+s.pc);return true});
+  $("sedCount").textContent=`${list.length} structure${list.length===1?"":"s"}`;
+  $("sedList").innerHTML=list.map(s=>`<article class="card sed">${diagram(s.dg)}<div class="sbody"><span class="lbl">${esc(s.c)} · ${s.see.map(x=>SEE[x]).join(", ")}</span><h3>${esc(s.n)}</h3><p>${esc(s.d)}</p>
+    <dl class="sedd"><div><dt>How it forms</dt><dd>${esc(s.f)}</dd></div><div><dt>Typical setting</dt><dd>${esc(s.env)}</dd></div>
+    <div><dt>Way up</dt><dd>${esc(s.up||"Not a way-up indicator")}</dd></div><div><dt>Flow direction</dt><dd>${esc(s.pc)}</dd></div></dl>
+    ${photoLinks([],s.n.split(" (")[0]+" sedimentary structure")}${srcLinks(s.src)}</div></article>`).join("")||'<p class="note">No structures match. Clear a filter.</p>';
+}
+$("sedClear").onclick=()=>{sedF={tell:null,see:null};drawSed()};
+
+/* ---------- tabs ---------- */
+/* ---------- stereonet (lower hemisphere) ----------
+   Vectors are [north, east, down]. Lines point into the lower hemisphere (down >= 0). */
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const norm360=a=>((a%360)+360)%360;
+const vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const vcross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const vlen=a=>Math.hypot(a[0],a[1],a[2]);
+const vunit=a=>{const l=vlen(a);return [a[0]/l,a[1]/l,a[2]/l]};
+const lower=a=>a[2]<-1e-9?[-a[0],-a[1],-a[2]]:a;
+const lineVec=(t,p)=>[Math.cos(p*D2R)*Math.cos(t*D2R),Math.cos(p*D2R)*Math.sin(t*D2R),Math.sin(p*D2R)];
+function vecTP(v){v=lower(vunit(v));return {t:norm360(Math.atan2(v[1],v[0])*R2D),p:Math.asin(Math.max(0,Math.min(1,v[2])))*R2D}}
+function plane(s,d){const dd=norm360(s+90);return {s:norm360(s),d,dd,sv:lineVec(s,0),dv:lineVec(dd,d),n:lineVec(dd+180,90-d)}}
+function planeFromNormal(n){const {t,p}=vecTP(n);return plane(norm360(t+180-90),90-p)}
+
+let stNet=ls.get("st-net","area"); // "area" = Schmidt equal-area, "angle" = Wulff equal-angle
+const ST_R=200,ST_C=220;
+function stRad(p){const c=(90-p)*D2R/2;return stNet==="area"?Math.SQRT2*Math.sin(c):Math.tan(c)}
+function stXY(v){const {t,p}=vecTP(v),r=stRad(p)*ST_R;return [ST_C+r*Math.sin(t*D2R),ST_C-r*Math.cos(t*D2R)]}
+function stInv(x,y){const dx=(x-ST_C)/ST_R,dy=(ST_C-y)/ST_R,r=Math.hypot(dx,dy);if(r>1)return null;
+  const c=stNet==="area"?Math.asin(Math.min(1,r/Math.SQRT2)):Math.atan(r);return {t:norm360(Math.atan2(dx,dy)*R2D),p:90-2*c*R2D}}
+const pathOf=pts=>pts.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join("");
+function gcPath(pl){const pts=[];for(let a=0;a<=180;a+=2){const c=Math.cos(a*D2R),s=Math.sin(a*D2R);pts.push(stXY([pl.sv[0]*c+pl.dv[0]*s,pl.sv[1]*c+pl.dv[1]*s,pl.sv[2]*c+pl.dv[2]*s]))}return pathOf(pts)}
+function gridSvg(){let g="";
+  for(let d=10;d<90;d+=10){g+=`<path d="${gcPath(plane(0,d))}"/><path d="${gcPath(plane(180,d))}"/>`}
+  for(let a=10;a<90;a+=10){const pts=[];for(let f=0;f<=180;f+=3){const v=[Math.cos(a*D2R),Math.sin(a*D2R)*Math.cos(f*D2R),Math.sin(a*D2R)*Math.sin(f*D2R)];pts.push(stXY(v))}
+    g+=`<path d="${pathOf(pts)}"/>`;g+=`<path d="${pathOf(pts.map(([x,y])=>[x,2*ST_C-y]))}"/>`}
+  return g}
+
+/* parsing: azimuth numbers, quadrant strikes (N30E) and dips with a direction (45SE) */
+const DIRV={N:[1,0],S:[-1,0],E:[0,1],W:[0,-1]};
+function parseAz(s){s=String(s).trim().toUpperCase().replace(/[°\s]/g,"");if(/^\d+(\.\d+)?$/.test(s)){const v=+s;return v>=0&&v<=360?norm360(v):null}
+  const m=s.match(/^([NS])(\d+(?:\.\d+)?)([EW])$/);if(!m)return null;const a=+m[2];if(a>90)return null;
+  return norm360(m[1]==="N"?(m[3]==="E"?a:-a):(m[3]==="E"?180-a:180+a))}
+function parseDip(s){s=String(s).trim().toUpperCase().replace(/[°\s]/g,"");const m=s.match(/^(\d+(?:\.\d+)?)([NSEW]{0,2})$/);if(!m)return null;const d=+m[1];if(d>90)return null;
+  let dir=null;if(m[2]){dir=[0,0];for(const c of m[2]){dir[0]+=DIRV[c][0];dir[1]+=DIRV[c][1]}}return {d,dir}}
+function parsePair(line){const p=String(line).trim().split(/[\s,\/;]+/).filter(Boolean);return p.length>=2?p:null}
+/* returns {pl} or {err} */
+function makePlane(a,b,mode){
+  const dip=parseDip(b);if(!dip)return {err:"Dip must be 0–90, optionally with a direction like 45SE."};
+  if(mode==="dd"){const dd=parseAz(a);if(dd==null)return {err:"Dip direction must be an azimuth from 0 to 360."};return {pl:plane(dd-90,dip.d)}}
+  const s=parseAz(a);if(s==null)return {err:"Strike must be an azimuth (0–360) or quadrant bearing like N30E."};
+  if(dip.dir){const c1=lineVec(s+90,0),c2=lineVec(s-90,0);const k1=c1[0]*dip.dir[0]+c1[1]*dip.dir[1],k2=c2[0]*dip.dir[0]+c2[1]*dip.dir[1];
+    if(Math.abs(k1-k2)<1e-6)return {err:"That dip direction runs along the strike. Check the letters."};return {pl:plane(k1>k2?s:s+180,dip.d)}}
+  return {pl:plane(s,dip.d)}}
+function makeLine(a,b){const t=parseAz(a),p=parseDip(b);if(t==null)return {err:"Trend must be an azimuth (0–360) or bearing like N30E."};if(!p||p.dir)return {err:"Plunge must be a number from 0 to 90."};return {v:lineVec(t,p.d)}}
+
+/* data */
+const ST_COL=["#0e7c86","#d9662b","#7a4fb0","#c23b5a","#2f6fd0","#6f8a1f","#a0661c","#1f8f5f"];
+let stItems=ls.get("st-items",[]),stSel=[],stSeq=ls.get("st-seq",1);
+const stSave=()=>{ls.set("st-items",stItems);ls.set("st-seq",stSeq)};
+const f0=x=>String(Math.round(x)).padStart(3,"0"),f2=x=>String(Math.round(x)).padStart(2,"0");
+const fmtPlane=pl=>`${f0(pl.s)}/${f2(pl.d)}`,fmtLine=v=>{const {t,p}=vecTP(v);return `${f2(p)}→${f0(t)}`};
+function itemPlane(it){return plane(it.s,it.d)}
+function itemVec(it){return lineVec(it.t,it.p)}
+function addItem(o){o.id=stSeq++;o.c=ST_COL[(o.id-1)%ST_COL.length];o.vis=true;stItems.push(o);stSave()}
+function addPlaneItem(pl,label,pole,from,gc=true){addItem({k:"plane",s:+pl.s.toFixed(2),d:+pl.d.toFixed(2),label:label||`Plane ${stSeq}`,pole:!!pole,gc,from})}
+function addLineItem(v,label,from){const {t,p}=vecTP(v);addItem({k:"line",t:+t.toFixed(2),p:+p.toFixed(2),label:label||`Line ${stSeq}`,from})}
+
+function drawNet(){
+  let s=`<circle cx="${ST_C}" cy="${ST_C}" r="${ST_R}" class="st-bg"/><g class="st-grid">${gridSvg()}</g>
+  <path d="M${ST_C} ${ST_C-ST_R}V${ST_C+ST_R}M${ST_C-ST_R} ${ST_C}H${ST_C+ST_R}" class="st-axis"/>
+  <circle cx="${ST_C}" cy="${ST_C}" r="${ST_R}" class="st-prim"/>`;
+  for(let a=0;a<360;a+=10){const r1=ST_R,r2=ST_R+(a%30?5:9);const x1=ST_C+r1*Math.sin(a*D2R),y1=ST_C-r1*Math.cos(a*D2R),x2=ST_C+r2*Math.sin(a*D2R),y2=ST_C-r2*Math.cos(a*D2R);s+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}" class="st-tick"/>`}
+  s+=`<text x="${ST_C}" y="${ST_C-ST_R-13}" text-anchor="middle" class="st-n">N</text>`;
+  stItems.filter(i=>i.vis).forEach(it=>{const sel=stSel.includes(it.id)?" sel":"";
+    if(it.k==="plane"){const pl=itemPlane(it);if(it.gc!==false)s+=`<path d="${gcPath(pl)}" class="st-gc${sel}" style="stroke:${it.c}"/>`;
+      if(it.pole){const [x,y]=stXY(pl.n);s+=`<path d="M${x-5} ${y-5}L${x+5} ${y+5}M${x-5} ${y+5}L${x+5} ${y-5}" class="st-pole${sel}" style="stroke:${it.c}"/>`}}
+    else{const [x,y]=stXY(itemVec(it));s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${sel?6:4.5}" class="st-pt" style="fill:${it.c}"/>`}});
+  $("stSvg").innerHTML=s;
+  $("stNetName").textContent=stNet==="area"?"Equal-area (Schmidt) net, lower hemisphere":"Equal-angle (Wulff) net, lower hemisphere";
+}
+function drawItems(){
+  const L=$("stList");
+  if(!stItems.length){L.innerHTML='<li class="note">Nothing plotted yet. Add a plane or line above, or load the example.</li>'}
+  else L.innerHTML=stItems.map(it=>{const txt=it.k==="plane"?`${fmtPlane(itemPlane(it))} <span class="note">dip dir ${f0(itemPlane(it).dd)}</span>`:`${fmtLine(itemVec(it))} <span class="note">plunge→trend</span>`;
+    return `<li class="st-it"><label><input type="checkbox" data-sel="${it.id}" ${stSel.includes(it.id)?"checked":""}><i style="background:${it.c}"></i><span><b>${esc(it.label)}</b> ${txt}${it.from?`<br><span class="note">${esc(it.from)}</span>`:""}</span></label>
+      <span class="st-act">${it.k==="plane"?`<button class="btn small" data-gc="${it.id}" type="button" aria-pressed="${it.gc!==false}">Circle</button><button class="btn small" data-pole="${it.id}" type="button" aria-pressed="${it.pole}">Pole</button>`:""}<button class="btn small" data-vis="${it.id}" type="button">${it.vis?"Hide":"Show"}</button><button class="btn small" data-del="${it.id}" type="button" aria-label="Delete ${esc(it.label)}">✕</button></span></li>`}).join("");
+  L.querySelectorAll("[data-sel]").forEach(c=>c.onchange=()=>{const id=+c.dataset.sel;stSel=c.checked?[...stSel.filter(x=>x!==id),id].slice(-2):stSel.filter(x=>x!==id);stRefresh()});
+  L.querySelectorAll("[data-pole]").forEach(b=>b.onclick=()=>{const it=stItems.find(i=>i.id==b.dataset.pole);it.pole=!it.pole;stSave();stRefresh()});
+  L.querySelectorAll("[data-gc]").forEach(b=>b.onclick=()=>{const it=stItems.find(i=>i.id==b.dataset.gc);it.gc=it.gc===false;stSave();stRefresh()});
+  L.querySelectorAll("[data-vis]").forEach(b=>b.onclick=()=>{const it=stItems.find(i=>i.id==b.dataset.vis);it.vis=!it.vis;stSave();stRefresh()});
+  L.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const id=+b.dataset.del;stItems=stItems.filter(i=>i.id!==id);stSel=stSel.filter(x=>x!==id);stSave();stRefresh()});
+}
+/* analysis of the selected pair (or single plane) */
+function stAnalysis(){
+  const box=$("stOut"),sel=stSel.map(id=>stItems.find(i=>i.id===id)).filter(Boolean);
+  if(sel.length===1&&sel[0].k==="plane"){const pl=itemPlane(sel[0]);
+    box.innerHTML=`<p><b>${esc(sel[0].label)}</b>: strike ${f0(pl.s)}°, dip ${f2(pl.d)}° toward ${f0(pl.dd)}° (right-hand rule ${fmtPlane(pl)}). Pole: ${fmtLine(pl.n)}.</p>
+      <div class="st-ad"><label>Apparent dip toward <input id="stAdDir" inputmode="decimal" placeholder="e.g. 120" size="6"></label><span id="stAdOut" class="note">Enter a direction (azimuth) for a cross section.</span></div>
+      <details><summary>How to do it by hand</summary><ol><li>Mark the right-hand-rule strike on the primitive and rotate the overlay so the mark sits at north.</li><li>Count the dip inward from the right-hand (east) side along the straight E–W line, then trace the great circle through that point.</li><li>For the pole, count the same number of degrees outward from the center toward the left (west) side and mark an ×.</li><li>Rotate the overlay back to its home position.</li></ol></details>`;
+    $("stAdDir").oninput=()=>{const b=parseAz($("stAdDir").value);if(b==null){$("stAdOut").textContent="Enter a direction (azimuth) for a cross section.";return}
+      const beta=Math.abs(Math.sin((b-pl.s)*D2R));const a=Math.atan(Math.tan(pl.d*D2R)*beta)*R2D;
+      const v=lineVec(b,a),down=Math.cos((b-pl.dd)*D2R)>=0;
+      $("stAdOut").innerHTML=`Apparent dip <b>${a.toFixed(1)}°</b> ${pl.d===90?"":down?`toward ${f0(b)}°`:`toward ${f0(b+180)}° (the plane rises toward ${f0(b)}°)`}. tan(apparent) = tan(${f2(pl.d)}°) × sin(${Math.round(Math.asin(beta)*R2D)}°, the angle between strike and section).`};
+    return}
+  if(sel.length<2){box.innerHTML='<p class="note">Tick one plane for its pole and apparent dip, or tick any two items to compare them.</p>';return}
+  const [A,B]=sel;let h="",steps="",add=null;
+  if(A.k==="plane"&&B.k==="plane"){const p1=itemPlane(A),p2=itemPlane(B);const x=vcross(p1.n,p2.n);
+    const ang=Math.acos(Math.min(1,Math.abs(vdot(p1.n,p2.n))))*R2D;
+    if(vlen(x)<1e-6){h=`<p>The planes are parallel, so they have no single line of intersection.</p>`}
+    else{const v=vunit(x);h=`<p>Line of intersection: <b>${fmtLine(v)}</b> (plunge ${f2(vecTP(v).p)}°, trend ${f0(vecTP(v).t)}°).</p>`;add=()=>addLineItem(v,`∩ ${A.label} & ${B.label}`,`Intersection of ${A.label} and ${B.label}`)}
+    h+=`<p>Angle between the planes: <b>${ang.toFixed(1)}°</b> and ${(180-ang).toFixed(1)}° (measured between their poles).</p>`;
+    steps=`<li>Plot both great circles. Where they cross is the line of intersection.</li><li>To read it, rotate the overlay until the point sits on the N–S or E–W straight line, count the plunge inward from the primitive, then rotate home and read the trend.</li><li>For the angle between the planes, plot both poles, rotate until they lie on one great circle, and count degrees along it. There are two answers that add up to 180° unless they are 90°.</li>`}
+  else if(A.k==="line"&&B.k==="line"){const a=itemVec(A),b=itemVec(B);const ang=Math.acos(Math.min(1,Math.abs(vdot(a,b))))*R2D;const x=vcross(a,b);
+    h=`<p>Angle between the lines: <b>${ang.toFixed(1)}°</b> and ${(180-ang).toFixed(1)}°.</p>`;
+    if(vlen(x)>1e-6){const pl=planeFromNormal(x);h+=`<p>Plane containing both lines: <b>${fmtPlane(pl)}</b> (strike ${f0(pl.s)}°, dip ${f2(pl.d)}° toward ${f0(pl.dd)}°).</p>`;add=()=>addPlaneItem(pl,`Plane ⊃ ${A.label} & ${B.label}`,false,`Plane through ${A.label} and ${B.label}`)}
+    else h+=`<p>The lines are parallel, so many planes contain them.</p>`;
+    steps=`<li>Plot both lines as points.</li><li>Rotate the overlay so both points lie on a single great circle and trace it: that is the plane containing both lines.</li><li>Count degrees along that great circle between the points for the angle. There are two answers, one under and one over 90°.</li>`}
+  else{const P=A.k==="plane"?A:B,Ln=A.k==="plane"?B:A,pl=itemPlane(P),v=itemVec(Ln);
+    const ang=Math.asin(Math.min(1,Math.abs(vdot(v,pl.n))))*R2D;
+    h=`<p>Angle between ${esc(Ln.label)} and ${esc(P.label)}: <b>${ang.toFixed(1)}°</b>.</p>`;
+    if(ang<1.5){const rk=norm360(Math.atan2(vdot(v,pl.dv),vdot(v,pl.sv))*R2D)%180;h+=`<p>The line lies in the plane. Rake (pitch): <b>${rk.toFixed(1)}°</b> measured within the plane from the strike direction ${f0(pl.s)}° (${(180-rk).toFixed(1)}° from ${f0(pl.s+180)}°).</p>`;
+      steps=`<li>Plot the plane and rotate the overlay so its strike sits at north.</li><li>Count degrees along the great circle from the strike point to the line: that is the rake (pitch).</li>`}
+    else{h+=`<p class="note">The line is not in the plane, so it has no rake there.</p>`;steps=`<li>Plot the plane's pole and the line, rotate until both lie on one great circle, and count the angle between them along it.</li><li>The line-to-plane angle is 90° minus that line-to-pole angle.</li>`}}
+  box.innerHTML=h+(add?`<button class="btn main" id="stAddRes" type="button">Plot this result</button>`:"")+`<details><summary>How to do it by hand</summary><ol>${steps}</ol></details>`;
+  if(add)$("stAddRes").onclick=()=>{add();stSel=[];stRefresh()};
+}
+function stRefresh(){drawNet();drawItems();stAnalysis();document.querySelectorAll("[data-net]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.net===stNet))}
+
+/* controls */
+let stMode=ls.get("st-mode","rhr");
+function stModeUI(){document.querySelectorAll("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===stMode));
+  $("stA_l").textContent=stMode==="rhr"?"Strike (right-hand rule)":"Dip direction";$("stA").placeholder=stMode==="rhr"?"e.g. 040 or N40E":"e.g. 130";$("stB").placeholder=stMode==="rhr"?"e.g. 35 or 35SE":"e.g. 35"}
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{stMode=b.dataset.mode;ls.set("st-mode",stMode);stModeUI()});
+document.querySelectorAll("[data-net]").forEach(b=>b.onclick=()=>{stNet=b.dataset.net;ls.set("st-net",stNet);stRefresh()});
+$("stAddP").onclick=()=>{const r=makePlane($("stA").value,$("stB").value,stMode);if(r.err){$("stMsg").textContent=r.err;return}$("stMsg").textContent="";addPlaneItem(r.pl,$("stLbl").value.trim(),$("stPole").checked);$("stA").value=$("stB").value=$("stLbl").value="";stRefresh()};
+$("stAddL").onclick=()=>{const r=makeLine($("stT").value,$("stP").value);if(r.err){$("stMsgL").textContent=r.err;return}$("stMsgL").textContent="";addLineItem(r.v,$("stLblL").value.trim());$("stT").value=$("stP").value=$("stLblL").value="";stRefresh()};
+$("stBulkGo").onclick=()=>{const kind=$("stBulkK").value;let ok=0,bad=[];
+  $("stBulk").value.split(/\n/).map(s=>s.trim()).filter(Boolean).forEach((ln,i)=>{const p=parsePair(ln);if(!p){bad.push(i+1);return}
+    if(kind==="line"){const r=makeLine(p[0],p[1]);if(r.err){bad.push(i+1);return}addLineItem(r.v)}
+    else{const r=makePlane(p[0],p[1],stMode);if(r.err){bad.push(i+1);return}addPlaneItem(r.pl,"",kind==="pole",undefined,kind!=="pole")}ok++});
+  $("stBulkMsg").textContent=`Added ${ok}.${bad.length?` Skipped line${bad.length>1?"s":""} ${bad.join(", ")}.`:""}`;stRefresh()};
+$("stClear").onclick=()=>{stItems=[];stSel=[];stSave();stRefresh()};
+$("stDemo").onclick=()=>{stItems=[];stSel=[];stSeq=1;
+  addPlaneItem(plane(30,40),"Bedding",true);addPlaneItem(plane(300,70),"Fault",false);addLineItem(lineVec(250,20),"Lineation");
+  stSel=[1,2];stRefresh()};
+const stSvg=$("stSvg");
+stSvg.addEventListener("pointermove",e=>{const r=stSvg.getBoundingClientRect(),x=(e.clientX-r.left)*440/r.width,y=-14+(e.clientY-r.top)*454/r.height;const q=stInv(x,y);
+  $("stCur").textContent=q?`Cursor: plunge ${f2(q.p)}° → trend ${f0(q.t)}° · as a pole, the plane is ${fmtPlane(planeFromNormal(lineVec(q.t,q.p)))}`:"Point at the net to read trend and plunge."});
+stSvg.addEventListener("pointerleave",()=>{$("stCur").textContent="Point at the net to read trend and plunge."});
+stModeUI();stRefresh();
+
+/* ---------- structural geology tools ---------- */
+const STS={wald:["Waldron & Snyder, Geological Structures (open textbook)","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)"],
+  wald2:["Waldron & Snyder Lab 2: Three-point problems","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.02%3A_Lab_2_-_Cross-sections_and_Three-point_Problems"],
+  wald1:["Waldron & Snyder Lab 1: Orientation of lines and planes","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.01%3A_Lab_1_-_Orientation_of_Lines_and_Planes"],
+  wou3:["Western Oregon Univ. ES406 Lab 3 (thickness)","https://people.wou.edu/~taylors/es406_structure/LAB3_geo_maps.pdf"],
+  ath4:["Athabasca Univ. GEOL 319 Lab 4 (depth)","https://geol319r4.athabascau.ca/lab-unit04.htm"],
+  mit:["MIT OCW 12.113 notes (stress on a plane)","https://ocw.mit.edu/courses/12-113-structural-geology-fall-2005/49f5de4deb991c038917151ce333ab4e_notes1.pdf"],
+  gw:["GW Project: Stress magnitude and fracture types","https://books.gw-project.org/structural-geology-applied-to-fractured-aquifer-characterization/chapter/2-4-stress-magnitude-and-fracture-types/"],
+  w19:["Waldron & Snyder 1.9: Stress","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01%3A_Topics/1.09%3A_Dynamic_Analysis-_Stress"],
+  w110:["Waldron & Snyder 1.10: Fractures","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01%3A_Topics/1.10%3A_Fractures"],
+  w111:["Waldron & Snyder 1.11: Faults","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01%3A_Topics/1.11%3A_Faults"],
+  w15:["Waldron & Snyder 1.5: Folds","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01%3A_Topics/1.05%3A_Folds"],
+  wfault:["Wikipedia: Fault (geology)","https://en.wikipedia.org/wiki/Fault_(geology)"],
+  wand:["Wikipedia: Anderson's theory of faulting","https://en.wikipedia.org/wiki/Anderson%27s_theory_of_faulting"],
+  wou7:["Western Oregon Univ. ES406 Lab 7 (π diagrams)","https://people.wou.edu/~taylors/es406_structure/LAB7_stereographic_analysis_folds.pdf"]};
+const srcOf=(...k)=>srcLinks(k.map(x=>STS[x]));
+const num=v=>{const s=String(v).trim();if(s==="")return NaN;return Number(s)};
+const r1=x=>(Math.round(x*10)/10).toString(),r2=x=>(Math.round(x*100)/100).toString();
+function quadStrike(s){s=norm360(s);const a=s<=90?["N",s,"E"]:s<=180?["S",180-s,"E"]:s<=270?["S",s-180,"W"]:["N",360-s,"W"];return `${a[0]}${Math.round(a[1])}${a[2]}`}
+function dirLetters(az){const c=Math.cos(az*D2R),s=Math.sin(az*D2R);return (Math.abs(c)>0.0087?(c>0?"N":"S"):"")+(Math.abs(s)>0.0087?(s>0?"E":"W"):"")}
+
+let stTool=ls.get("sg-tool","conv");
+const SG_TOOLS=[["conv","Orientation converter"],["three","Three-point problem"],["thick","Thickness & depth"],["mohr","Mohr circle"],["learn","Folds, faults & stress"]];
+function sgNav(){$("sgNav").innerHTML="";SG_TOOLS.forEach(([k,t])=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=t;b.setAttribute("aria-pressed",k===stTool);b.onclick=()=>{stTool=k;ls.set("sg-tool",k);sgNav();sgShow()};$("sgNav").append(b)})}
+function sgShow(){document.querySelectorAll("[data-sg]").forEach(el=>el.hidden=el.dataset.sg!==stTool);if(stTool==="mohr")mohrCalc()}
+
+/* orientation converter */
+let cvMode="rhr";
+document.querySelectorAll("[data-cv]").forEach(b=>b.onclick=()=>{cvMode=b.dataset.cv;document.querySelectorAll("[data-cv]").forEach(x=>x.setAttribute("aria-pressed",x===b));$("cvA_l").textContent=cvMode==="rhr"?"Strike":"Dip direction";cvCalc()});
+function cvCalc(){const a=$("cvA").value,b=$("cvB").value,o=$("cvOut");if(!a.trim()||!b.trim()){o.innerHTML='<p class="note">Enter a strike or dip direction and a dip. Quadrant bearings like N40E and dips like 35SE work.</p>';return}
+  const r=makePlane(a,b,cvMode);if(r.err){o.innerHTML=`<p class="note">${esc(r.err)}</p>`;return}const pl=r.pl,pole=vecTP(pl.n);
+  o.innerHTML=`<dl class="sg-dl"><div><dt>Right-hand rule</dt><dd>${f0(pl.s)}/${f2(pl.d)}</dd></div><div><dt>Dip direction / dip</dt><dd>${f0(pl.dd)}/${f2(pl.d)}</dd></div>
+    <div><dt>Quadrant</dt><dd>${quadStrike(pl.s)}, ${Math.round(pl.d)}${dirLetters(pl.dd)}</dd></div><div><dt>Pole (plunge→trend)</dt><dd>${f2(pole.p)}→${f0(pole.t)}</dd></div></dl>
+    <p class="note">Right-hand rule: with your right hand's fingers pointing down-dip, your thumb points along the recorded strike, so the dip is always 90° clockwise from the strike. ${cvMode==="rhr"&&!parseDip(b).dir?"No dip direction letters were given, so the strike was read as right-hand rule.":""}</p>`}
+["cvA","cvB"].forEach(id=>$(id).oninput=cvCalc);
+
+/* three-point problem */
+function tpCalc(){const o=$("tpOut");const P=["A","B","C"].map(k=>[num($("tp"+k+"e").value),num($("tp"+k+"n").value),num($("tp"+k+"z").value)]);
+  if(P.flat().some(isNaN)){o.innerHTML='<p class="note">Enter east, north and elevation for all three points, in the same units.</p>';return}
+  /* vectors in north, east, down */
+  const V=P.map(([e,n,z])=>[n,e,-z]);const u=[V[1][0]-V[0][0],V[1][1]-V[0][1],V[1][2]-V[0][2]],w=[V[2][0]-V[0][0],V[2][1]-V[0][1],V[2][2]-V[0][2]];
+  const nrm=vcross(u,w);if(vlen(nrm)<1e-9*Math.max(1,vlen(u)*vlen(w))){o.innerHTML='<p class="note">These points lie on one line, so they don\'t define a plane.</p>';return}
+  const pl=planeFromNormal(nrm);
+  /* textbook construction: highest A, lowest C, intermediate B */
+  const S=P.map((p,i)=>({p,k:"ABC"[i]})).sort((x,y)=>y.p[2]-x.p[2]);const [hi,mid,lo]=S;let con="";
+  if(hi.p[2]===lo.p[2]){con=`<p>All three points are at the same elevation, so the plane is horizontal.</p>`}
+  else{const f=(hi.p[2]-mid.p[2])/(hi.p[2]-lo.p[2]);const bp=[hi.p[0]+f*(lo.p[0]-hi.p[0]),hi.p[1]+f*(lo.p[1]-hi.p[1])];
+    const hd=Math.abs((mid.p[0]-bp[0])*Math.cos(pl.s*D2R)-(mid.p[1]-bp[1])*Math.sin(pl.s*D2R));
+    con=`<ol><li>Order the points: highest <b>${hi.k}</b> (${r2(hi.p[2])}), intermediate <b>${mid.k}</b> (${r2(mid.p[2])}), lowest <b>${lo.k}</b> (${r2(lo.p[2])}).</li>
+    <li>Find the point on line ${hi.k}–${lo.k} at the elevation of ${mid.k}: it is (${r2(hi.p[2])} − ${r2(mid.p[2])}) / (${r2(hi.p[2])} − ${r2(lo.p[2])}) = <b>${r2(f)}</b> of the way from ${hi.k} to ${lo.k}, at east ${r2(bp[0])}, north ${r2(bp[1])}.</li>
+    <li>The line from ${mid.k} to that point joins two points at the same elevation, so it is a strike line: strike <b>${f0(pl.s)}°</b> (right-hand rule).</li>
+    <li>Measure the horizontal distance perpendicular to that strike line from it to ${hi.k} or ${lo.k} (${hi.k}: ${r2(Math.abs((hi.p[0]-bp[0])*Math.cos(pl.s*D2R)-(hi.p[1]-bp[1])*Math.sin(pl.s*D2R)))}). Dip = arctan(elevation difference ÷ that distance) = <b>${r1(pl.d)}°</b>.</li></ol>`}
+  o.innerHTML=`<p class="sg-big">${f0(pl.s)}/${f2(pl.d)} <span class="note">right-hand rule · dip direction ${f0(pl.dd)}° · ${quadStrike(pl.s)}, ${Math.round(pl.d)}${dirLetters(pl.dd)}</span></p>${con}<button class="btn" id="tpPlot" type="button">Plot on stereonet</button>`;
+  $("tpPlot").onclick=()=>{addPlaneItem(pl,"Three-point plane",true);stRefresh();document.querySelector('.tab[data-t="st"]').click()}}
+document.querySelectorAll("#sgThree input").forEach(i=>i.oninput=tpCalc);
+$("tpEx").onclick=()=>{[["0","0","420"],["800","200","300"],["300","900","360"]].forEach((v,i)=>{const k="ABC"[i];$("tp"+k+"e").value=v[0];$("tp"+k+"n").value=v[1];$("tp"+k+"z").value=v[2]});tpCalc()};
+
+/* thickness and depth */
+function thCalc(){const o=$("thOut"),h=num($("thH").value),v=num($("thV").value)||0,d=num($("thD").value),k=$("thKind").value;
+  if(isNaN(h)||isNaN(d)||d<0||d>90){o.innerHTML='<p class="note">Enter the outcrop width and the dip (0–90°).</p>';return}
+  const s=Math.sin(d*D2R),c=Math.cos(d*D2R);let t,f;
+  if(k==="flat"){t=h*s;f=`t = h·sin(dip) = ${r2(h)} × sin ${r1(d)}°`}
+  else if(k==="steep"){t=h*s-v*c;f=`t = h·sin(dip) − v·cos(dip) = ${r2(h)}×sin ${r1(d)}° − ${r2(v)}×cos ${r1(d)}°`}
+  else if(k==="gentle"){t=v*c-h*s;f=`t = v·cos(dip) − h·sin(dip) = ${r2(v)}×cos ${r1(d)}° − ${r2(h)}×sin ${r1(d)}°`}
+  else{t=h*s+v*c;f=`t = h·sin(dip) + v·cos(dip) = ${r2(h)}×sin ${r1(d)}° + ${r2(v)}×cos ${r1(d)}°`}
+  o.innerHTML=`<p class="sg-big">${r2(t)} <span class="note">true thickness, same units as h</span></p><p class="mono">${f}</p>${t<0?'<p class="note">A negative result means the slope case chosen doesn\'t match the numbers. Check which is steeper, the bed or the slope.</p>':""}`}
+document.querySelectorAll("#sgThick input,#sgThick select").forEach(i=>i.oninput=thCalc);
+$("thKind").onchange=()=>{$("thVw").hidden=$("thKind").value==="flat";thCalc()};
+function dpCalc(){const o=$("dpOut"),x=num($("dpX").value),d=num($("dpD").value);if(isNaN(x)||isNaN(d)||d<0||d>=90){o.innerHTML='<p class="note">Enter the horizontal distance (perpendicular to strike) and the dip.</p>';return}
+  o.innerHTML=`<p class="sg-big">${r2(x*Math.tan(d*D2R))} <span class="note">vertical depth to the bed</span></p><p class="mono">depth = distance × tan(dip) = ${r2(x)} × tan ${r1(d)}°</p>`}
+["dpX","dpD"].forEach(id=>$(id).oninput=dpCalc);
+
+/* Mohr circle (2-D, compression positive) */
+function mohrCalc(){const s1=num($("moS1").value),s3=num($("moS3").value),th=num($("moT").value),C=num($("moC").value),ph=num($("moF").value),T=num($("moTs").value),o=$("moOut");
+  if(isNaN(s1)||isNaN(s3)){o.innerHTML='<p class="note">Enter σ1 and σ3.</p>';$("moSvg").innerHTML="";return}
+  if(s1<s3){o.innerHTML='<p class="note">σ1 must be greater than or equal to σ3.</p>';$("moSvg").innerHTML="";return}
+  const c=(s1+s3)/2,r=(s1-s3)/2;const hasT=!isNaN(th);const sn=hasT?c+r*Math.cos(2*th*D2R):NaN,tau=hasT?r*Math.sin(2*th*D2R):NaN;
+  const env=!isNaN(C)&&!isNaN(ph)&&ph>=0&&ph<90;
+  /* view box */
+  const lo=Math.min(0,s3,env?-C/Math.tan(Math.max(ph,1)*D2R)*0.25:0,!isNaN(T)?-T:0),hi=Math.max(s1,1);const span=(hi-lo)||1;const W=520,H=300,pad=36;
+  const sc=(W-2*pad)/(span*1.1),X=v=>pad+(v-lo+span*0.05)*sc,Y=v=>H/2-v*sc;const yMax=(H/2-12)/sc;
+  let g=`<path d="M${pad-10} ${H/2}H${W-8}" class="mo-ax"/><path d="M${X(0)} 8V${H-8}" class="mo-ax"/><text x="${W-10}" y="${H/2-6}" text-anchor="end" class="mo-t">σn</text><text x="${X(0)+6}" y="18" class="mo-t">τ</text>`;
+  g+=`<circle cx="${X(c)}" cy="${Y(0)}" r="${r*sc}" class="mo-c"/>`;
+  g+=`<circle cx="${X(s1)}" cy="${Y(0)}" r="3" class="mo-dot"/><text x="${X(s1)}" y="${Y(0)+16}" text-anchor="middle" class="mo-t">σ1</text><circle cx="${X(s3)}" cy="${Y(0)}" r="3" class="mo-dot"/><text x="${X(s3)}" y="${Y(0)+16}" text-anchor="middle" class="mo-t">σ3</text>`;
+  if(env){const tn=Math.tan(ph*D2R);const xs=[lo-span,hi+span];g+=`<path d="M${X(xs[0])} ${Y(C+tn*xs[0])}L${X(xs[1])} ${Y(C+tn*xs[1])}M${X(xs[0])} ${Y(-(C+tn*xs[0]))}L${X(xs[1])} ${Y(-(C+tn*xs[1]))}" class="mo-env"/>`}
+  if(!isNaN(T)&&T>=0)g+=`<path d="M${X(-T)} 8V${H-8}" class="mo-ten"/><text x="${X(-T)-4}" y="${H-12}" text-anchor="end" class="mo-t">−T</text>`;
+  if(hasT)g+=`<path d="M${X(c)} ${Y(0)}L${X(sn)} ${Y(tau)}" class="mo-r"/><circle cx="${X(sn)}" cy="${Y(tau)}" r="5" class="mo-pt"/>`;
+  $("moSvg").innerHTML=`<defs><clipPath id="moClip"><rect x="0" y="0" width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#moClip)">${g}</g>`;
+  let h=`<dl class="sg-dl"><div><dt>Center (mean of σ1, σ3)</dt><dd>${r2(c)}</dd></div><div><dt>Radius</dt><dd>${r2(r)}</dd></div><div><dt>Differential stress σ1 − σ3</dt><dd>${r2(s1-s3)}</dd></div>`;
+  if(hasT)h+=`<div><dt>Normal stress σn</dt><dd>${r2(sn)}</dd></div><div><dt>Shear stress τ</dt><dd>${r2(Math.abs(tau))}</dd></div>`;h+="</dl>";
+  if(hasT)h+=`<p class="mono">σn = ½(σ1+σ3) + ½(σ1−σ3)·cos2θ<br>τ = ½(σ1−σ3)·sin2θ, with θ = ${r1(th)}° between σ1 and the plane's normal (point plotted at 2θ = ${r1(2*th)}°).</p>`;
+  if(env){const tn=Math.tan(ph*D2R);const dist=c*Math.sin(ph*D2R)+C*Math.cos(ph*D2R);const fails=r>=dist;
+    h+=`<p><b>${fails?"Shear failure: the circle reaches the failure envelope.":"No shear failure: the circle stays below the failure envelope."}</b> Envelope: a line with intercept C = ${r2(C)} (cohesion) and slope angle φ = ${r1(ph)}° (friction angle), i.e. τ = ${r2(C)} + σn·tan ${r1(ph)}°.</p>
+      <p class="note">Predicted shear fractures make 2θ = 90° − φ with σ3 on the diagram, so each fracture lies about ${r1(45-ph/2)}° from σ1.</p>`}
+  if(!isNaN(T)&&T>=0&&s3<=-T)h+=`<p><b>Tensile failure:</b> σ3 is tensile and has reached the tensile strength (σ3 ≤ −T), so extension fractures form perpendicular to σ3.</p>`;
+  o.innerHTML=h+'<p class="note">Geologists count compression as positive. This 2-D circle uses σ1 and σ3 only.</p>'}
+["moS1","moS3","moT","moC","moF","moTs"].forEach(id=>$(id).oninput=mohrCalc);
+$("moEx").onclick=()=>{$("moS1").value=100;$("moS3").value=40;$("moT").value=60;$("moC").value=10;$("moF").value=30;$("moTs").value="";mohrCalc()};
+
+/* concept cards */
+const FIG={
+ normal:`<path d="M20 30H121L164.5 110H20Z" class="bed"/><path d="M132 50H240V110H164.5Z" class="bed"/><path d="M110 10L170 120" class="ln"/><path d="M20 54H134M20 78H147" class="ln thin"/><path d="M145 74H240M158 98H240" class="ln thin"/><path d="M215 26v18" class="arr" marker-end="url(#ah2)"/><text x="30" y="22" class="t">footwall</text><text x="236" y="122" text-anchor="end" class="t">hanging wall moves down</text>`,
+ reverse:`<path d="M20 50H132L164.5 110H20Z" class="bed"/><path d="M110 10H240V110H164.5Z" class="bed"/><path d="M110 10L170 120" class="ln"/><path d="M20 74H145M20 98H158" class="ln thin"/><path d="M128.5 44H240M141.6 68H240" class="ln thin"/><path d="M222 74v-18" class="arr" marker-end="url(#ah2)"/><text x="30" y="42" class="t">footwall</text><text x="236" y="122" text-anchor="end" class="t">hanging wall moves up</text>`,
+ strike:`<rect x="20" y="20" width="220" height="90" class="bed"/><path d="M20 65H240" class="ln"/><path d="M100 30V58M150 72V100" class="ln thin"/><path d="M60 45h40" class="arr" marker-end="url(#ah2)"/><path d="M200 88h-40" class="arr" marker-end="url(#ah2)"/><text x="130" y="122" text-anchor="middle" class="t">map view: offset is horizontal</text>`,
+ anti:`<path d="M20 110 Q130 0 240 110" class="ln"/><path d="M40 110 Q130 25 220 110" class="ln thin"/><path d="M60 110 Q130 50 200 110" class="ln thin"/><path d="M130 30V115" class="ln dash"/><text x="136" y="118" class="t">axial surface</text>`,
+ syn:`<path d="M20 20 Q130 130 240 20" class="ln"/><path d="M40 20 Q130 105 220 20" class="ln thin"/><path d="M60 20 Q130 80 200 20" class="ln thin"/><path d="M130 15V100" class="ln dash"/>`};
+const fig=k=>`<figure class="dg"><svg viewBox="0 0 260 128" role="img" aria-label="Schematic diagram"><defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" class="ahd"/></marker></defs>${FIG[k]}</svg><figcaption>Schematic, not to scale</figcaption></figure>`;
+const LEARN=[
+ {h:"Hanging wall and footwall",f:null,b:"The hanging wall is the block on the down-dip side of a fault (above it); the footwall is on the up-dip side (below it). The terms come from mining.",s:["w111","wfault"]},
+ {h:"Normal fault",f:"normal",b:"The hanging wall moves down relative to the footwall. In Anderson's theory, normal faults form where σ1 is vertical and are predicted to dip about 60°.",s:["wfault","wand"]},
+ {h:"Reverse and thrust faults",f:"reverse",b:"The hanging wall moves up relative to the footwall, shortening the crust. A thrust is a reverse fault dipping less than 45°. Anderson's theory puts σ3 vertical, with dips of about 30°.",s:["wfault","wand"]},
+ {h:"Strike-slip faults",f:"strike",b:"Slip is close to the strike of the fault and the fault is usually near vertical; Anderson's theory puts σ2 vertical. Dextral (right-lateral) or sinistral (left-lateral) describes which way the far side moves, as seen by an observer standing on the opposite side of the fault.",s:["w111","wfault","wand"]},
+ {h:"Oblique slip, separation and slip",f:null,b:"An oblique-slip fault has dip-slip and strike-slip components of comparable size. Separation is the distance between the two cutoff lines of an offset surface; slip is the actual movement vector, and it can't be found from the separation of a single offset surface. Throw and heave are the vertical and horizontal components of dip separation.",s:["w111"]},
+ {h:"Anticline vs antiform, syncline vs synform",f:"anti",b:"An antiform closes upward (limbs dip away from the hinge); a synform closes downward. Anticline and syncline describe younging: in an anticline the beds young away from the fold's core, in a syncline toward it. They match antiform/synform only where the beds are right way up.",s:["w15"]},
+ {h:"Fold parts",f:"syn",b:"Hinges are points of tightest curvature, joined in 3-D by the hinge line; limbs lie between hinges. The axial (hinge) surface joins hinge lines. In a cylindrical fold all these lines are parallel, and their direction is the fold axis.",s:["w15"]},
+ {h:"Interlimb angle",f:null,b:"Gentle 180–170°, open 170–90°, tight 90–10°, isoclinal 10–0°, ptygmatic or fan below 0°.",s:["w15"]},
+ {h:"Hinge plunge and axial-surface dip",f:null,b:"Hinge plunge: subhorizontal 0–10°, gentle 10–30°, moderate 30–60°, steep 60–80°, subvertical 80–90°. Axial-surface dip: recumbent 0–10°, gently inclined 10–30°, moderately inclined 30–60°, steeply inclined 60–80°, upright 80–90°.",s:["w15"]},
+ {h:"Finding a fold axis on a stereonet",f:null,b:"In a cylindrical fold, poles to bedding lie on a great circle (the π circle); the pole to that circle is the fold axis. A β diagram uses the intersection of the bedding great circles instead, which only works for perfectly cylindrical folds. The fold axis lies in the axial plane. Try it with the “Fold axis (π)” button on the Stereonet tab.",s:["wou7"]},
+ {h:"Stress basics",f:null,b:"Geologists count compressive stress as positive. Differential stress is σ1 − σ3; mean stress is the average of the three principal stresses.",s:["w19"]},
+ {h:"Joints and conjugate shear fractures",f:null,b:"Extension fractures (joints) form at low mean stress, perpendicular to σ3. Conjugate shear fractures form two sets about 60° apart; σ1 bisects the acute angle, σ3 the obtuse angle, and the sets intersect parallel to σ2.",s:["w110"]}];
+function drawLearn(){$("sgLearn").innerHTML=LEARN.map(c=>`<article class="card tex">${c.f?fig(c.f):""}<h3>${esc(c.h)}</h3><p>${esc(c.b)}</p>${srcOf(...c.s)}</article>`).join("")}
+
+/* stereonet: fold axis from poles (π diagram), using the orientation tensor's smallest eigenvector */
+function eigSym3(A){const a=A.map(r=>r.slice()),V=[[1,0,0],[0,1,0],[0,0,1]];
+  for(let it=0;it<60;it++){let p=0,q=1;if(Math.abs(a[0][2])>Math.abs(a[p][q])){p=0;q=2}if(Math.abs(a[1][2])>Math.abs(a[p][q])){p=1;q=2}if(Math.abs(a[p][q])<1e-12)break;
+    const t=(a[q][q]-a[p][p])/(2*a[p][q]),tt=Math.sign(t||1)/(Math.abs(t)+Math.sqrt(t*t+1)),c=1/Math.sqrt(tt*tt+1),s=tt*c;
+    for(let k=0;k<3;k++){const akp=a[k][p],akq=a[k][q];a[k][p]=c*akp-s*akq;a[k][q]=s*akp+c*akq}
+    for(let k=0;k<3;k++){const apk=a[p][k],aqk=a[q][k];a[p][k]=c*apk-s*aqk;a[q][k]=s*apk+c*aqk}
+    for(let k=0;k<3;k++){const vkp=V[k][p],vkq=V[k][q];V[k][p]=c*vkp-s*vkq;V[k][q]=s*vkp+c*vkq}}
+  return [0,1,2].map(i=>({val:a[i][i],vec:[V[0][i],V[1][i],V[2][i]]})).sort((x,y)=>x.val-y.val)}
+$("stPi").onclick=()=>{const P=stItems.filter(i=>i.k==="plane"&&i.vis&&!/^π /.test(i.label));
+  if(P.length<3){$("stPiMsg").textContent="Plot at least three bedding planes (visible) first.";return}
+  const T=[[0,0,0],[0,0,0],[0,0,0]];P.forEach(i=>{const n=itemPlane(i).n;for(let r=0;r<3;r++)for(let c=0;c<3;c++)T[r][c]+=n[r]*n[c]});
+  const e=eigSym3(T),ax=e[0].vec,girdle=planeFromNormal(ax),{t,p}=vecTP(ax);
+  stItems=stItems.filter(i=>!/^π /.test(i.label));
+  addPlaneItem(girdle,"π circle (best fit)",false,`Best-fit great circle through ${P.length} poles`);addLineItem(ax,"π axis = fold axis",`Pole to the π circle`);
+  P.forEach(i=>i.pole=true);stSave();
+  $("stPiMsg").textContent=`Fold axis ${f2(p)}→${f0(t)} from ${P.length} planes. Their poles are now shown; the fit is a least-squares great circle, so check it against the poles.`;stRefresh()};
+sgNav();sgShow();drawLearn();$("srcSg").innerHTML=[...new Set(Object.values(STS).map(x=>x.join("|")))].map(x=>x.split("|")).map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join(" · ")+` · <a href="https://geol319r4.athabascau.ca/lab-unit03.htm" target="_blank" rel="noopener">Athabasca Univ. GEOL 319 Lab 3</a> · <a href="https://courses.eas.ualberta.ca/eas233/0809winter/EAS233Lab03notes.pdf" target="_blank" rel="noopener">U. Alberta EAS 233 Lab 3</a>`;cvCalc();tpCalc();thCalc();dpCalc();
+
+/* ---------- practice problems and worksheets ---------- */
+function rng(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
+const ri=(R,a,b,step=1)=>a+Math.floor(R()*((b-a)/step+1))*step;
+const pick=(R,arr)=>arr[Math.floor(R()*arr.length)];
+const ang=(label,v,tol=3)=>({label,v,tol,kind:"angle"}),nu=(label,v,tol,unit="")=>({label,v,tol,unit,kind:"num"});
+const rhrTxt=pl=>`${f0(pl.s)}/${f2(pl.d)}`;
+const PR={
+ conv:{t:"Strike & dip notation",net:false,src:"wald1",gen(R){const s=ri(R,5,355,5),d=ri(R,10,80,5),pl=plane(s,d);const k=R()<.5;
+   const q=k?`Write the plane <b>${quadStrike(pl.s)}, ${d}${dirLetters(pl.dd)}</b> in right-hand-rule azimuth notation.`:`Write the plane <b>${f0(pl.dd)}/${f2(d)}</b> (dip direction/dip) in right-hand-rule strike/dip.`;
+   return {q,a:[ang("Strike (RHR)",pl.s,1),ang("Dip",d,1)],alt:[[pl.dd,d],[pl.s+180,d],[pl.s,90-d]],steps:`<li>The right-hand-rule strike is 90° counterclockwise from the dip direction ${f0(pl.dd)}°: ${f0(pl.dd)} − 90 = <b>${f0(pl.s)}</b>.</li><li>Answer: <b>${rhrTxt(pl)}</b>.</li>`}}},
+ pole:{t:"Pole to a plane",net:true,src:"ualb",gen(R){const pl=plane(ri(R,0,355,5),ri(R,10,85,5)),p=vecTP(pl.n);
+   return {q:`Find the trend and plunge of the pole to plane <b>${rhrTxt(pl)}</b>.`,a:[ang("Pole trend",p.t),ang("Pole plunge",p.p,2)],alt:[[pl.dd,p.p],[p.t,pl.d],[pl.dd,pl.d]],
+   steps:`<li>The pole is opposite the dip direction: ${f0(pl.dd)} ± 180 = trend <b>${f0(p.t)}°</b>.</li><li>The pole plunges 90° − dip = 90 − ${f2(pl.d)} = <b>${f2(p.p)}°</b>.</li><li>On the net: count the dip outward from the center on the side opposite the dip and mark an ×.</li>`,plot:[["p",pl,"Plane"]]}}},
+ inter:{t:"Intersection of two planes",net:true,src:"ualb",gen(R){let p1,p2,x;do{p1=plane(ri(R,0,355,5),ri(R,20,80,5));p2=plane(ri(R,0,355,5),ri(R,20,80,5));x=vcross(p1.n,p2.n)}while(vlen(x)<.5);const L=vecTP(x);
+   return {q:`Planes <b>${rhrTxt(p1)}</b> and <b>${rhrTxt(p2)}</b> intersect. Give the trend and plunge of their line of intersection.`,a:[ang("Trend",L.t),ang("Plunge",L.p,3)],alt:[[L.t+180,L.p],[L.t,90-L.p],[L.t+90,L.p]],
+   steps:`<li>Plot both great circles; the point where they cross is the intersection.</li><li>Rotate that point onto the N–S or E–W line, count the plunge in from the primitive, rotate home and read the trend.</li><li>Answer: <b>${f2(L.p)}→${f0(L.t)}</b>.</li>`,plot:[["p",p1,"Plane 1"],["p",p2,"Plane 2"]]}}},
+ angle:{t:"Angle between two lines",net:true,src:"ualb",gen(R){const a=lineVec(ri(R,0,355,5),ri(R,0,80,5)),b=lineVec(ri(R,0,355,5),ri(R,0,80,5)),A=vecTP(a),B=vecTP(b),g=Math.acos(Math.min(1,Math.abs(vdot(a,b))))*R2D;
+   return {q:`Find the acute angle between lines <b>${f2(A.p)}→${f0(A.t)}</b> and <b>${f2(B.p)}→${f0(B.t)}</b> (plunge→trend).`,a:[ang("Acute angle",g,3)],alt:[[180-g],[Math.min(angDiff(A.t,B.t),180-angDiff(A.t,B.t))],[Math.abs(A.p-B.p)]],
+   steps:`<li>Plot both lines as points.</li><li>Rotate until both lie on one great circle, then count degrees along it.</li><li>Acute angle <b>${r1(g)}°</b> (the other answer is ${r1(180-g)}°).</li>`,plot:[["l",a,"Line 1"],["l",b,"Line 2"]]}}},
+ appdip:{t:"Apparent dip",net:true,src:"appd",gen(R){let pl,b,dd;do{pl=plane(ri(R,0,355,5),ri(R,20,75,5));b=ri(R,0,355,5)}while(Math.abs(Math.sin((b-pl.s)*D2R))<.2);
+   const beta=Math.abs(Math.sin((b-pl.s)*D2R)),a=Math.atan(Math.tan(pl.d*D2R)*beta)*R2D;const down=Math.cos((b-pl.dd)*D2R)>=0;const tr=down?b:norm360(b+180);
+   return {q:`A cross section runs along ${f0(b)}°–${f0(b+180)}° across plane <b>${rhrTxt(pl)}</b>. What is the apparent dip in the section?`,a:[ang("Apparent dip",a,1.5)],alt:[[pl.d],[Math.atan(Math.tan(pl.d*D2R)*Math.abs(Math.cos((b-pl.s)*D2R)))*R2D],[pl.d*beta]],
+   steps:`<li>Angle between strike (${f0(pl.s)}°) and the section line: ${r1(Math.asin(beta)*R2D)}°.</li><li>tan(apparent) = tan(${f2(pl.d)}°) × sin(${r1(Math.asin(beta)*R2D)}°) → <b>${r1(a)}°</b>, dipping toward ${f0(tr)}°.</li><li>On the net: the point where the great circle crosses the ${f0(tr)}° radius; count its plunge.</li>`,plot:[["p",pl,"Plane"]]}}},
+ rake:{t:"Line from rake",net:true,src:"ualb",gen(R){const pl=plane(ri(R,0,355,5),ri(R,20,80,5)),rk=ri(R,10,170,5),c=Math.cos(rk*D2R),s=Math.sin(rk*D2R);
+   const v=[pl.sv[0]*c+pl.dv[0]*s,pl.sv[1]*c+pl.dv[1]*s,pl.sv[2]*c+pl.dv[2]*s],L=vecTP(v);
+   return {q:`A slickenline on fault <b>${rhrTxt(pl)}</b> has a rake of <b>${rk}°</b> measured from the strike direction ${f0(pl.s)}°. Find its trend and plunge.`,a:[ang("Trend",L.t),ang("Plunge",L.p,2)],alt:[[L.t+180,L.p],[L.t,rk>90?180-rk:rk],[pl.s,L.p]],
+   steps:`<li>Plot the plane and rotate so its strike (${f0(pl.s)}°) is at north.</li><li>Count ${rk}° along the great circle from the strike point and mark the line.</li><li>Rotate it onto a straight line to read the plunge, then home for the trend: <b>${f2(L.p)}→${f0(L.t)}</b>.</li>`,plot:[["p",pl,"Fault"]]}}},
+ three:{t:"Three-point problem",net:false,src:"wald2",gen(R){let P,pl;do{const s=ri(R,0,355,5),d=ri(R,5,35,1),p0=plane(s,d);const z0=ri(R,300,900,10);
+     P=[0,1,2].map(()=>{const e=ri(R,0,1000,10),n=ri(R,0,1000,10);const along=(n*Math.cos(p0.dd*D2R)+e*Math.sin(p0.dd*D2R));return [e,n,Math.round(z0-along*Math.tan(d*D2R))]});
+     const u=[P[1][1]-P[0][1],P[1][0]-P[0][0],-(P[1][2]-P[0][2])],w=[P[2][1]-P[0][1],P[2][0]-P[0][0],-(P[2][2]-P[0][2])],x=vcross(u,w);pl=vlen(x)>2e4?planeFromNormal(x):null}while(!pl||pl.d<2);
+   return {q:`A coal seam is found at three points (meters):<br><span class="mono">A: E ${P[0][0]}, N ${P[0][1]}, elev ${P[0][2]}<br>B: E ${P[1][0]}, N ${P[1][1]}, elev ${P[1][2]}<br>C: E ${P[2][0]}, N ${P[2][1]}, elev ${P[2][2]}</span><br>Find its strike (RHR) and dip.`,a:[ang("Strike (RHR)",pl.s,2),ang("Dip",pl.d,1)],alt:[[pl.s+180,pl.d],[pl.dd,pl.d],[pl.s,90-pl.d]],
+   steps:`<li>Find the point on the line from highest to lowest at the middle elevation; join it to the middle point to get a strike line.</li><li>Dip = arctan(elevation difference ÷ horizontal distance perpendicular to strike).</li><li>Answer: <b>${rhrTxt(pl)}</b> (dip direction ${f0(pl.dd)}°). Check it in the Structural tab's three-point tool.</li>`,three:P}}},
+ thick:{t:"True thickness",net:false,src:"wou3",gen(R){const h=ri(R,40,400,5),d=ri(R,10,80,5),flat=R()<.5,v=flat?0:ri(R,5,60,5);const t=flat?h*Math.sin(d*D2R):h*Math.sin(d*D2R)+v*Math.cos(d*D2R);
+   return {q:flat?`On flat ground, a sandstone's outcrop is <b>${h} m</b> wide measured perpendicular to strike. It dips <b>${d}°</b>. Find its true thickness.`:`A sandstone dips <b>${d}°</b> into a hillside that slopes the opposite way. Its outcrop is <b>${h} m</b> wide horizontally perpendicular to strike, and its lower contact is <b>${v} m</b> lower than its upper contact. Find its true thickness.`,
+   a:[nu("Thickness",t,Math.max(.5,t*.01),"m")],alt:flat?[[h*Math.cos(d*D2R)],[h*Math.tan(d*D2R)],[h/Math.sin(d*D2R)]]:[[h*Math.sin(d*D2R)-v*Math.cos(d*D2R)],[h*Math.sin(d*D2R)],[h*Math.cos(d*D2R)+v*Math.sin(d*D2R)]],steps:flat?`<li>t = h·sin(dip) = ${h} × sin ${d}° = <b>${r1(t)} m</b>.</li>`:`<li>Slope and dip in opposite directions: t = h·sin(dip) + v·cos(dip).</li><li>= ${h}×sin ${d}° + ${v}×cos ${d}° = <b>${r1(t)} m</b>.</li>`}}},
+ depth:{t:"Depth to a bed",net:false,src:"ath4",gen(R){const x=ri(R,50,800,10),d=ri(R,5,70,1),z=x*Math.tan(d*D2R);
+   return {q:`A bed crops out on flat ground and dips <b>${d}°</b>. How deep is it <b>${x} m</b> away from the outcrop, measured horizontally in the dip direction?`,a:[nu("Depth",z,Math.max(.5,z*.01),"m")],alt:[[x*Math.sin(d*D2R)],[x/Math.tan(d*D2R)],[x*Math.cos(d*D2R)]],steps:`<li>depth = distance × tan(dip) = ${x} × tan ${d}° = <b>${r1(z)} m</b>.</li>`}}},
+ mohr:{t:"Mohr circle",net:false,src:"mit",gen(R){const s3=ri(R,10,80,5),s1=s3+ri(R,20,150,5),th=ri(R,10,80,5),c=(s1+s3)/2,r=(s1-s3)/2,sn=c+r*Math.cos(2*th*D2R),tau=r*Math.sin(2*th*D2R);
+   return {q:`σ1 = <b>${s1} MPa</b> and σ3 = <b>${s3} MPa</b>. A plane's normal makes <b>${th}°</b> with σ1. Find the normal stress and shear stress on the plane.`,a:[nu("σn",sn,.5,"MPa"),nu("τ",tau,.5,"MPa")],alt:[[c+r*Math.cos(th*D2R),r*Math.sin(th*D2R)],[c+r*Math.cos(2*(90-th)*D2R),r*Math.sin(2*(90-th)*D2R)],[c+r*Math.sin(2*th*D2R),r*Math.cos(2*th*D2R)]],
+   steps:`<li>Center ½(σ1+σ3) = ${r1(c)}, radius ½(σ1−σ3) = ${r1(r)}.</li><li>σn = ${r1(c)} + ${r1(r)}·cos ${2*th}° = <b>${r1(sn)} MPa</b>.</li><li>τ = ${r1(r)}·sin ${2*th}° = <b>${r1(tau)} MPa</b>.</li>`}}},
+ truedip:{t:"True dip from two apparent dips",net:true,src:"ualb",gen(R){let pl,b1,b2,l1,l2;do{pl=plane(ri(R,0,355,5),ri(R,15,70,5));b1=ri(R,0,355,5);b2=ri(R,0,355,5);
+     const ln=b=>vecTP(vcross(pl.n,lineVec(b+90,0)));l1=ln(b1);l2=ln(b2)}while(angDiff(l1.t,l2.t)<30||angDiff(l1.t,l2.t)>150||l1.p<3||l2.p<3);
+   return {q:`In two road cuts, a bed shows an apparent dip of <b>${r1(l1.p)}° toward ${f0(l1.t)}°</b> and <b>${r1(l2.p)}° toward ${f0(l2.t)}°</b>. Find the strike (RHR) and true dip.`,a:[ang("Strike (RHR)",pl.s,3),ang("Dip",pl.d,2)],alt:[[pl.dd,pl.d],[pl.s+180,pl.d],[pl.s,Math.max(l1.p,l2.p)]],
+   steps:`<li>Each apparent dip is a line lying in the bed: plot ${r1(l1.p)}→${f0(l1.t)} and ${r1(l2.p)}→${f0(l2.t)} as points.</li><li>Rotate the overlay until both points lie on one great circle and trace it: that great circle is the bed.</li><li>Read its strike and dip: <b>${rhrTxt(pl)}</b>. The true dip is always steeper than any apparent dip.</li>`,plot:[["l",lineVec(l1.t,l1.p),"Apparent dip 1"],["l",lineVec(l2.t,l2.p),"Apparent dip 2"]]}}},
+ foldaxis:{t:"Fold axis from two limbs",net:true,src:"wald4",gen(R){let p1,p2,x;do{const s1=ri(R,0,355,5);p1=plane(s1,ri(R,20,75,5));p2=plane(s1+180+ri(R,-40,40,5),ri(R,20,75,5));x=vcross(p1.n,p2.n)}while(vlen(x)<.4);const L=vecTP(x);
+   return {q:`The two limbs of a cylindrical fold measure <b>${rhrTxt(p1)}</b> and <b>${rhrTxt(p2)}</b>. Find the trend and plunge of the fold axis.`,a:[ang("Trend",L.t),ang("Plunge",L.p,3)],alt:[[L.t+180,L.p],[L.t,90-L.p],[L.t+90,L.p]],
+   steps:`<li>In a cylindrical fold every part of the folded surface contains the fold axis, so the intersection of the two limbs is the axis.</li><li>Plot both limbs as great circles and read where they cross: <b>${f2(L.p)}→${f0(L.t)}</b>.</li>`,plot:[["p",p1,"Limb 1"],["p",p2,"Limb 2"]]}}},
+ interlimb:{t:"Interlimb angle",net:false,src:"w15",gen(R){const d1=ri(R,5,85,5),d2=ri(R,5,85,5),ia=180-d1-d2;if(ia<=0)return PR.interlimb.gen(R);
+   const cls=a=>a>=170?"Gentle":a>=90?"Open":a>=10?"Tight":"Isoclinal";const right=`${cls(ia)} (${ia}°)`;
+   const cand=[right,`${cls(d1+d2)} (${d1+d2}°)`,`${cls(Math.abs(d1-d2))} (${Math.abs(d1-d2)}°)`,...["Gentle","Open","Tight","Isoclinal"].filter(c=>c!==cls(ia)).map(c=>`${c} (${ia}°)`)];const opts=[...new Set(cand)].slice(0,4);
+   for(let i=opts.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+   return {q:`A fold has a horizontal hinge. In a cross section perpendicular to the hinge, one limb dips <b>${d1}°</b> east and the other dips <b>${d2}°</b> west. What are the interlimb angle and its class?`,a:[{label:"Answer",kind:"choice",opts,v:right}],
+   steps:`<li>The limbs and the horizontal make a triangle in the profile, so interlimb = 180° − ${d1}° − ${d2}° = <b>${ia}°</b>.</li><li>Classes: gentle 180–170°, open 170–90°, tight 90–10°, isoclinal 10–0°, so this is <b>${cls(ia).toLowerCase()}</b>.</li>`}}},
+ slip:{t:"Fault slip components",net:false,src:"wald8",gen(R){const S=ri(R,10,500,5),rk=ri(R,10,80,5),ss=S*Math.cos(rk*D2R),ds=S*Math.sin(rk*D2R);
+   return {q:`Piercing points show <b>${S} m</b> of net slip on a fault, along a slickenline with a rake of <b>${rk}°</b> from the fault's strike. Find the strike-slip and dip-slip components.`,a:[nu("Strike slip",ss,Math.max(.5,ss*.01),"m"),nu("Dip slip",ds,Math.max(.5,ds*.01),"m")],alt:[[ds,ss],[S*rk/90,S*(90-rk)/90],[S*Math.tan(rk*D2R),S]],
+   steps:`<li>Strike slip is the component of net slip parallel to the fault's strike: ${S}·cos ${rk}° = <b>${r1(ss)} m</b>.</li><li>Dip slip is the component down the dip: ${S}·sin ${rk}° = <b>${r1(ds)} m</b>.</li>`}}},
+ failure:{t:"Will the rock fail?",net:false,src:"gw",gen(R){const s3=ri(R,0,60,5),s1=s3+ri(R,20,160,5),C=ri(R,5,40,5),ph=ri(R,20,40,5),c=(s1+s3)/2,r=(s1-s3)/2,dist=c*Math.sin(ph*D2R)+C*Math.cos(ph*D2R),f=r>=dist;
+   if(Math.abs(r-dist)<2)return PR.failure.gen(R);const ang2=45-ph/2;
+   const opts=[`Yes, shear fractures about ${r1(ang2)}° from σ1`,`Yes, shear fractures about ${r1(45+ph/2)}° from σ1`,`No, the circle stays below the envelope`,`Yes, extension fractures perpendicular to σ1`];const right=f?opts[0]:opts[2];
+   for(let i=3;i>0;i--){const j=Math.floor(R()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+   return {q:`σ1 = <b>${s1} MPa</b>, σ3 = <b>${s3} MPa</b>. The rock's failure envelope has cohesion <b>${C} MPa</b> and friction angle <b>${ph}°</b>. Does it fail in shear, and how are the fractures oriented?`,a:[{label:"Answer",kind:"choice",opts,v:right}],
+   steps:`<li>Center ${r1(c)}, radius ${r1(r)}. The envelope is τ = ${C} + σn·tan ${ph}°.</li><li>Distance from the center to the envelope = ${r1(c)}·sin ${ph}° + ${C}·cos ${ph}° = ${r1(dist)}; the radius ${f?"reaches":"is less than"} it, so <b>${f?"it fails":"no failure"}</b>.</li><li>Shear fractures form where 2θ from σ3 equals 90° − φ, about ${r1(ang2)}° from σ1.</li>`}}},
+ concepts:{t:"Concepts quiz",net:false,src:"w111",gen(R){const c=pick(R,CONCEPTS);const opts=[...c.o];for(let i=opts.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+   return {q:esc(c.q),a:[{label:"Answer",kind:"choice",opts,v:c.o[0]}],steps:`<li><b>${esc(c.o[0])}</b>. ${esc(c.why)}</li>`,src:c.s}}},
+ mineral:{t:"Mineral ID (thin section)",net:false,src:"min",gen(R){const QG=["col","pleo","rel","clv","xpl","ext","tw"];const pool=MINERALS.filter(m=>!m.col.includes("opaque"));const m=pick(R,pool);
+   const props=QG.filter(g=>vals(m,g).length).map(g=>[ALLG.find(x=>x.id===g).t,vals(m,g).map(v=>label(g,v)).join(" or ")]);
+   const ok=o=>o!==m&&QG.some(g=>{const a=vals(m,g),b=vals(o,g);return a.length&&b.length&&!a.some(v=>b.includes(v))});
+   const opts=[m];let tries=0;while(opts.length<4&&tries<500){const o=pick(R,pool);if(!opts.includes(o)&&ok(o))opts.push(o);tries++}
+   for(let i=opts.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+   return {q:`Which mineral fits these observations?<ul class="pq-props">${props.map(([k,v])=>`<li><b>${esc(k)}:</b> ${esc(v)}</li>`).join("")}</ul>`,a:[{label:"Mineral",kind:"choice",opts:opts.map(o=>o.n),v:m.n}],
+   steps:`<li><b>${esc(m.n)}</b>. ${esc(m.key)}</li><li>${esc(m.vs)}</li>`}}},
+ sed:{t:"Sedimentary structures",net:false,src:"sed",gen(R){const s=pick(R,SED);const words=s.n.replace(/\(.*?\)/g,"").split(/[\s/]+/).filter(w=>w.length>3).map(w=>w.replace(/s$/,""));
+   const mask=t=>words.reduce((x,w)=>x.replace(new RegExp(w+"\\w*","gi"),"▁▁▁"),t);
+   const opts=[s];while(opts.length<4){const o=pick(R,SED);if(!opts.includes(o))opts.push(o)}for(let i=3;i>0;i--){const j=Math.floor(R()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]]}
+   return {q:`Name the structure.<ul class="pq-props"><li><b>What it looks like:</b> ${esc(mask(s.d))}</li><li><b>How it forms:</b> ${esc(mask(s.f))}</li><li><b>Setting:</b> ${esc(mask(s.env))}</li></ul>`,a:[{label:"Structure",kind:"choice",opts:opts.map(o=>o.n),v:s.n}],
+   steps:`<li><b>${esc(s.n)}</b>.${s.up?` Way up: ${esc(s.up)}`:""} Flow direction: ${esc(s.pc)}</li>`}}}
+};
+const CONCEPTS=[
+ {q:"The hanging wall moved down relative to the footwall. What kind of fault is it?",o:["Normal","Reverse","Thrust","Strike-slip"],why:"In a normal fault the hanging wall drops relative to the footwall.",s:"wfault"},
+ {q:"A reverse fault that dips less than 45° is called a…",o:["Thrust fault","Normal fault","Listric fault","Strike-slip fault"],why:"A thrust has the same motion as a reverse fault but dips under 45°.",s:"wfault"},
+ {q:"In Anderson's theory, which faults form when σ1 is vertical?",o:["Normal faults","Thrust faults","Strike-slip faults","No faults form"],why:"σ1 vertical is the normal-fault (gravity) regime.",s:"wand"},
+ {q:"In Anderson's theory, which faults form when σ3 is vertical?",o:["Thrust (reverse) faults","Normal faults","Strike-slip faults","Joints only"],why:"σ3 vertical gives thrust faults, predicted to dip about 30°.",s:"wand"},
+ {q:"In Anderson's theory, which principal stress is vertical for strike-slip faults?",o:["σ2","σ1","σ3","None of them"],why:"Strike-slip (wrench) faults form with σ2 vertical and are predicted to be vertical.",s:"wand"},
+ {q:"Anderson's theory predicts that normal faults dip about…",o:["60°","30°","90°","10°"],why:"Normal faults are predicted at about 60°, thrusts about 30°, strike-slip faults vertical.",s:"wand"},
+ {q:"The block on the down-dip side of a fault is the…",o:["Hanging wall","Footwall","Piercing point","Fault core"],why:"The hanging wall is on the down-dip side; the footwall is on the up-dip side.",s:"w111"},
+ {q:"Can you determine a fault's slip from the separation of a single offset surface?",o:["No, you need piercing points or slickenlines","Yes, separation equals slip","Only for normal faults","Only if the surface is horizontal"],why:"Slip cannot be found from the separation of one offset surface; kinematic indicators are needed.",s:"w111"},
+ {q:"Throw is the ___ component of dip separation.",o:["Vertical","Horizontal","Strike-parallel","Oblique"],why:"Throw is the vertical component; heave is the horizontal component.",s:"w111"},
+ {q:"A dextral strike-slip fault is also called…",o:["Right-lateral","Left-lateral","Sinistral","Oblique"],why:"Dextral means right-lateral: the far side appears to move right, seen from the opposite side of the fault.",s:"wfault"},
+ {q:"A fold that closes upward, with limbs dipping away from the hinge, is a(n)…",o:["Antiform","Synform","Syncline","Monocline"],why:"An antiform closes upward. It is an anticline only if the beds young away from its core.",s:"w15"},
+ {q:"In which fold do the beds young toward the inside (core) of the fold?",o:["Syncline","Anticline","Antiform","Any upright fold"],why:"In a syncline the younging direction points toward the inside of the fold.",s:"w15"},
+ {q:"A fold with an interlimb angle of 5° is…",o:["Isoclinal","Tight","Open","Gentle"],why:"Isoclinal folds have interlimb angles of 10–0°.",s:"w15"},
+ {q:"A fold hinge plunging 45° is…",o:["Moderately plunging","Gently plunging","Steeply plunging","Subvertical"],why:"Moderately plunging is 30–60°.",s:"w15"},
+ {q:"A fold whose axial surface dips 5° is…",o:["Recumbent","Upright","Steeply inclined","Moderately inclined"],why:"Recumbent folds have axial surfaces dipping 0–10°.",s:"w15"},
+ {q:"In a cylindrical fold, poles to bedding fall on a great circle. The pole to that circle is the…",o:["Fold axis","Axial plane","Mean bedding plane","Limb"],why:"The pole to the π circle is the π axis, which defines the fold axis.",s:"wou7"},
+ {q:"Joints (extension fractures) form perpendicular to…",o:["σ3","σ1","σ2","The fold axis"],why:"Extension fractures form at low mean stress perpendicular to σ3.",s:"w110"},
+ {q:"For conjugate shear fractures, σ1 bisects…",o:["The acute angle between the two sets","The obtuse angle between the two sets","Neither angle","The line where they intersect"],why:"σ1 bisects the acute angle; σ3 bisects the obtuse angle; the sets intersect parallel to σ2.",s:"w110"},
+ {q:"In the geological sign convention, compressive stress is…",o:["Positive","Negative","Always zero","Measured as shear"],why:"Geologists represent compressive normal stress as positive.",s:"w19"},
+ {q:"Differential stress is…",o:["σ1 − σ3","σ1 + σ3","(σ1 + σ2 + σ3) / 3","σ2 − σ3"],why:"Differential stress is the largest minus the smallest principal stress.",s:"w19"},
+ {q:"Which stereonet is used for contouring point density?",o:["Equal-area (Schmidt)","Equal-angle (Wulff)","Either one equally","Neither, use a rose diagram"],why:"Equal-area projections are used for contouring point density.",s:"ath3"}];
+const PSRC={wald1:STS.wald1,wald2:STS.wald2,ualb:["U. Alberta EAS 233 Lab 3","https://courses.eas.ualberta.ca/eas233/0809winter/EAS233Lab03notes.pdf"],appd:["Athabasca Univ. GEOL 319 Lab 3","https://geol319r4.athabascau.ca/lab-unit03.htm"],wou3:STS.wou3,ath4:STS.ath4,mit:STS.mit,min:["UT Arlington: Distinguishing features of minerals","https://bpb-us-e1.wpmucdn.com/websites.uta.edu/dist/9/4733/files/2021/06/distin_features_minerals-1.pdf"],sed:["Sources listed on each Sedimentary structures card","https://en.wikipedia.org/wiki/Sedimentary_structures"],wald4:["Waldron & Snyder Lab 4: Folds","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.04%3A_Lab_4_-_Introduction_to_Folds"],wald8:["Waldron & Snyder Lab 8: Fault slip","https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/02%3A_Labs/2.08%3A_Lab_8_-_Measuring_Fault_Slip"],ath3:["Athabasca Univ. GEOL 319 Lab 3","https://geol319r4.athabascau.ca/lab-unit03.htm"]};
+const psrc=p=>{const k=p.src||PR[p.k].src;return PSRC[k]||STS[k]};
+const PGROUPS=[["Stereonet",["pole","inter","angle","appdip","truedip","rake","foldaxis"]],["Maps, folds & faults",["conv","three","thick","depth","interlimb","slip"]],["Stress",["mohr","failure"]],["ID & concepts",["mineral","sed","concepts"]]];
+let pqOn=new Set(ls.get("pq-on",["pole","inter","appdip","three","thick","mohr","mineral","sed"])),pqCur=null,pqScore=ls.get("pq-score",{ok:0,n:0});
+function pqTopics(){const el=$("pqTopics");el.innerHTML=PGROUPS.map(([g,ks])=>`<div class="grp"><span class="lbl">${g}</span><div class="chips">${ks.map(k=>`<button class="chip" type="button" data-pk="${k}" aria-pressed="${pqOn.has(k)}">${PR[k].t}</button>`).join("")}</div></div>`).join("");
+  el.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{const k=b.dataset.pk;pqOn.has(k)?pqOn.delete(k):pqOn.add(k);if(!pqOn.size)pqOn.add(k);ls.set("pq-on",[...pqOn]);pqTopics()})}
+function makeProblem(k,seed){const p=PR[k].gen(rng(seed));p.k=k;p.seed=seed;return p}
+function angDiff(a,b){const d=Math.abs(norm360(a)-norm360(b));return Math.min(d,360-d)}
+function pqCheck(p,inputs){return p.a.map((a,i)=>{const s=inputs[i];if(s==null||s==="")return null;if(a.kind==="choice")return s===a.v;const x=parseFloat(String(s).replace(",","."));if(isNaN(x))return null;
+  return a.kind==="angle"?(/strike|trend|direction/i.test(a.label)?angDiff(x,a.v):Math.abs(x-a.v))<=a.tol:Math.abs(x-a.v)<=a.tol})}
+const ansTxt=a=>a.kind==="choice"?a.v:a.kind==="angle"?`${/strike|trend/i.test(a.label)?f0(a.v):r1(a.v)}°`:`${r1(a.v)} ${a.unit}`;
+function pqNew(){const ks=[...pqOn];const k=ks[Math.floor(Math.random()*ks.length)];pqCur=makeProblem(k,(Math.random()*2**31)|0);pqDraw()}
+function pqDraw(){const p=pqCur,el=$("pqCard");if(!p){el.innerHTML='<p class="note">Pick topics, then press New problem.</p>';return}
+  el.innerHTML=`<span class="lbl">${esc(PR[p.k].t)} · #${p.seed}</span><div class="pq-q">${p.q}</div>
+   <div class="pq-ans">${p.a.map((a,i)=>a.kind==="choice"?`<div class="chips pq-opts" data-i="${i}">${a.opts.map(o=>`<button class="chip" type="button" data-o="${esc(o)}">${esc(o)}</button>`).join("")}</div>`:`<label><span>${esc(a.label)}${a.unit?` (${a.unit})`:a.kind==="angle"?" (°)":""}</span><input data-i="${i}" inputmode="decimal" autocomplete="off"></label>`).join("")}</div>
+   <div class="st-row"><button class="btn main" id="pqGo" type="button">Check</button><button class="btn" id="pqShow" type="button">Show solution</button>${p.plot?'<button class="btn" id="pqPlot" type="button">Plot givens on stereonet</button>':""}${p.three?'<button class="btn" id="pqTp" type="button">Open in three-point tool</button>':""}</div>
+   <div id="pqRes" aria-live="polite"></div>`;
+  const choice={};el.querySelectorAll(".pq-opts").forEach(g=>g.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{g.querySelectorAll("[data-o]").forEach(x=>x.setAttribute("aria-pressed",x===b));choice[g.dataset.i]=b.dataset.o}));
+  const sol=(head)=>`${head}<details ${head?"":"open"}><summary>Worked solution</summary><ol>${p.steps}</ol></details>${srcLinks([psrc(p)])}`;
+  $("pqGo").onclick=()=>{const inp=p.a.map((a,i)=>a.kind==="choice"?choice[i]:el.querySelector(`input[data-i="${i}"]`).value);const r=pqCheck(p,inp);
+    if(r.some(x=>x==null||x===undefined)){$("pqRes").innerHTML='<p class="note">Answer every part first.</p>';return}
+    const all=r.every(Boolean);if(!p.counted){p.counted=true;pqScore.n++;if(all)pqScore.ok++;ls.set("pq-score",pqScore);pqScoreDraw()}
+    $("pqRes").innerHTML=sol(`<p class="pq-v ${all?"ok":"bad"}">${all?"Correct.":"Not quite."} ${p.a.map((a,i)=>`${esc(a.label)}: ${r[i]?"✓":"✗"} (answer ${esc(ansTxt(a))})`).join(" · ")}</p>`)};
+  $("pqShow").onclick=()=>{$("pqRes").innerHTML=sol(`<p class="note">Answer: ${p.a.map(a=>`${esc(a.label)} ${esc(ansTxt(a))}`).join(" · ")}</p>`)};
+  if(p.plot)$("pqPlot").onclick=()=>{p.plot.forEach(([t,o,l])=>t==="p"?addPlaneItem(o,l,false):addLineItem(o,l));stRefresh();document.querySelector('.tab[data-t="st"]').click()};
+  if(p.three)$("pqTp").onclick=()=>{p.three.forEach((v,i)=>{const k="ABC"[i];$("tp"+k+"e").value=v[0];$("tp"+k+"n").value=v[1];$("tp"+k+"z").value=v[2]});tpCalc();stTool="three";ls.set("sg-tool","three");sgNav();sgShow();document.querySelector('.tab[data-t="sg"]').click()}}
+function pqScoreDraw(){$("pqScore").textContent=pqScore.n?`${pqScore.ok} of ${pqScore.n} correct this browser`:""}
+$("pqNew").onclick=pqNew;$("pqReset").onclick=()=>{pqScore={ok:0,n:0};ls.set("pq-score",pqScore);pqScoreDraw()};
+
+/* worksheet */
+function blankNet(){let g="";const old=stNet;stNet="area";g=`<svg viewBox="0 0 440 440" class="ws-net"><circle cx="220" cy="220" r="200" fill="none" stroke="#999"/><g fill="none" stroke="#bbb" stroke-width=".6">${gridSvg()}</g><path d="M220 20V420M20 220H420" stroke="#888" stroke-width=".6"/><circle cx="220" cy="220" r="200" fill="none" stroke="#000" stroke-width="1.4"/><text x="220" y="14" text-anchor="middle" font-size="14" font-family="sans-serif">N</text></svg>`;stNet=old;return g}
+/* multiple choice: correct answer + distractors from common mistakes, padded with nearby values */
+const fmtA=(a,v)=>a.kind==="angle"?`${a.label} ${/strike|trend/i.test(a.label)?f0(norm360(v)):r1(v)}°`:`${a.label} ${r1(v)} ${a.unit}`;
+function mcOf(p,R){const a0=p.a[0];if(a0.kind==="choice"){const ci=a0.opts.indexOf(a0.v);return {opts:a0.opts.slice(0,4),ci}}
+  const right=p.a.map(a=>a.v),txt=vs=>p.a.map((a,i)=>fmtA(a,vs[i])).join(", ");const far=vs=>p.a.some((a,i)=>{const d=a.kind==="angle"&&/strike|trend/i.test(a.label)?angDiff(vs[i],a.v):Math.abs(vs[i]-a.v);return d>Math.max(2*a.tol,a.kind==="angle"?4:Math.abs(a.v)*.05)});
+  const ok=vs=>vs.every((v,i)=>isFinite(v)&&(p.a[i].kind!=="angle"||/strike|trend/i.test(p.a[i].label)||(v>=0&&v<=90))&&(p.a[i].kind==="angle"||v>0));
+  const seen=new Set([txt(right)]),opts=[txt(right)];
+  for(const vs of (p.alt||[])){if(opts.length>=4)break;if(!ok(vs)||!far(vs))continue;const t=txt(vs);if(!seen.has(t)){seen.add(t);opts.push(t)}}
+  let n=0;while(opts.length<4&&n<200){n++;const vs=p.a.map(a=>a.kind==="angle"?(/strike|trend/i.test(a.label)?norm360(a.v+(R()<.5?-1:1)*ri(R,15,60,5)):Math.min(89,Math.max(1,a.v+(R()<.5?-1:1)*ri(R,6,25,1)))):a.v*(R()<.5?ri(R,55,85,5)/100:ri(R,120,160,5)/100));
+    if(!far(vs))continue;const t=txt(vs);if(!seen.has(t)){seen.add(t);opts.push(t)}}
+  const order=opts.map((o,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[order[i],order[j]]=[order[j],order[i]]}
+  return {opts:order.map(i=>opts[i]),ci:order.indexOf(0)}}
+const LET="ABCD";
+function setCode(S){return `${S.seed}-${S.n}-${S.mc?"M":"W"}-${S.ks.map(k=>Object.keys(PR).indexOf(k).toString(36)).join("")}`}
+function parseCode(c){const m=String(c).trim().toUpperCase().match(/^(\d+)-(\d+)-([MW])-([0-9A-Z]+)$/);if(!m)return null;const keys=Object.keys(PR);const ks=[...m[4].toLowerCase()].map(ch=>keys[parseInt(ch,36)]).filter(Boolean);
+  return ks.length?{seed:+m[1],n:Math.min(30,Math.max(1,+m[2])),mc:m[3]==="M",ks}:null}
+function buildSheet(o){const n=o?.n??Math.max(1,Math.min(30,parseInt($("wsN").value)||8)),seed=o?.seed??(parseInt($("wsSeed").value)||1),title=$("wsTitle").value.trim()||"Structural geology practice",mc=o?.mc??$("wsMc").checked;
+  const ks=o?.ks??[...pqOn].sort((a,b)=>Object.keys(PR).indexOf(a)-Object.keys(PR).indexOf(b));const R=rng(seed);
+  const probs=Array.from({length:n},(_,i)=>makeProblem(ks[i%ks.length],(R()*2**31)|0));
+  if(mc){const R2=rng(seed^0x5bd1e995);probs.forEach(p=>p.mc=mcOf(p,R2))}
+  const S={title,seed,n,mc,ks,probs,needNet:probs.some(p=>PR[p.k].net)};S.code=setCode(S);S.key=mc?probs.map(p=>LET[p.mc.ci]).join(""):"";return S}
+const strongify=h=>h.replace(/<b>/g,"<strong>").replace(/<\/b>/g,"</strong>");
+function sheetBody(S,key){return `<h1>${esc(S.title)}</h1><p class="meta">${key?"Answer key":"Name: ______________________ &nbsp; Date: __________"} · Set code ${S.code} · ${S.probs.length} problems${key||!S.needNet?"":" · Use a lower-hemisphere equal-area net."}</p>
+  ${key&&S.mc?`<p class="ws-key"><strong>Key:</strong> ${S.key.split("").map((c,i)=>`${i+1}${c}`).join(" &nbsp;")}</p>`:""}
+  <ol class="ws-list">${S.probs.map(p=>`<li><p class="ws-t">${esc(PR[p.k].t)}</p><div>${strongify(p.q)}</div>${
+    key?`<p class="ws-a"><strong>Answer:</strong> ${S.mc?`(${LET[p.mc.ci]}) ${esc(p.mc.opts[p.mc.ci])}`:p.a.map(a=>`${esc(a.label)} ${esc(ansTxt(a))}`).join(" · ")}</p><ol class="ws-steps">${p.steps}</ol>`
+    :S.mc?`<ol class="ws-mc" type="A">${p.mc.opts.map(o=>`<li>${esc(o)}</li>`).join("")}</ol>`
+    :(p.a[0].kind==="choice"?`<ol class="ws-mc" type="a">${p.a[0].opts.map(o=>`<li>${esc(o)}</li>`).join("")}</ol>`:`<p class="ws-blank">${p.a.map(a=>`${esc(a.label)}: ________`).join(" &nbsp; ")}</p>`)}</li>`).join("")}</ol>`}
+function bubbleSheet(S){const rows=S.probs.map((p,i)=>`<div class="bs-row"><span class="bs-n">${i+1}</span>${p.mc.opts.map((o,j)=>`<span class="bs-b">${LET[j]}</span>`).join("")}</div>`).join("");
+  return `<section class="page"><h1>Answer sheet</h1><p class="meta">${esc(S.title)} · Set code ${S.code}</p><div class="bs-head"><div>Name ______________________________</div><div>Section ________</div><div>Date ____________</div></div>
+  <p class="meta">Fill in one bubble per question completely.</p><div class="bs-grid">${rows}</div><div class="bs-score">Score: ______ / ${S.probs.length}</div></section>`}
+const SHEET_CSS=`body{font:14px/1.45 Georgia,serif;color:#111;max-width:760px;margin:24px auto;padding:0 16px}h1{font-size:22px;margin:0 0 4px}.meta{color:#555;margin:0 0 14px}.ws-list>li{margin:0 0 18px;break-inside:avoid}.ws-t{font:600 11px sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#555;margin:0 0 2px}.ws-blank{margin:8px 0 0}.ws-mc{margin:6px 0 0;padding-left:26px}.ws-mc li{margin:2px 0}.ws-a{margin:6px 0 2px}.ws-key{font-family:monospace;font-size:13px;margin:0 0 14px;line-height:1.8}.ws-steps{margin:0;color:#333}.mono{font-family:monospace}ul{margin:4px 0}.page{break-before:page}.ws-net{width:420px;max-width:100%;display:block;margin:12px auto}.src{font:12px sans-serif;color:#555}
+.bs-head{display:flex;gap:24px;flex-wrap:wrap;margin:6px 0 10px;font:14px sans-serif}.bs-grid{columns:2;column-gap:40px;font:14px sans-serif}.bs-row{display:flex;align-items:center;gap:10px;padding:5px 0;break-inside:avoid;border-bottom:1px solid #eee}.bs-n{width:26px;text-align:right;font-weight:600}.bs-b{width:22px;height:22px;border:1.5px solid #222;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#555}.bs-score{margin-top:18px;font:16px sans-serif}@media print{body{margin:0}}`;
+function sheetHtml(S){const srcs=[...new Map(S.probs.map(p=>{const x=psrc(p);return [x[1],x]})).values()];
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(S.title)}</title><style>${SHEET_CSS}</style></head><body>${sheetBody(S,false)}${S.needNet?`<section class="page"><h1>Stereonet</h1><p class="meta">Trace onto tracing paper and pin through the center.</p>${blankNet()}${blankNet()}</section>`:""}${S.mc?bubbleSheet(S):""}<section class="page">${sheetBody(S,true)}<p class="src">Methods and data: ${srcs.map(([t,u])=>`${esc(t)} (${esc(u)})`).join("; ")}.</p></section></body></html>`}
+function wsInfo(S){$("wsCode").textContent=S.code;$("wsKeyLine").textContent=S.mc?`Key: ${S.key}`:"";}
+$("wsPrev").onclick=()=>{const S=buildSheet();wsInfo(S);$("wsOut").innerHTML=`<div class="ws-prev">${sheetBody(S,$("wsKey").checked)}${S.mc&&!$("wsKey").checked?`<div class="ws-bs">${bubbleSheet(S).replace('class="page"','')}</div>`:""}</div>`};
+$("wsRand").onclick=()=>{$("wsSeed").value=1+((Math.random()*99999)|0)};
+$("wsLoad").onclick=()=>{const c=parseCode($("wsCodeIn").value);if(!c){$("wsLoadMsg").textContent="That doesn't look like a set code, e.g. 101-8-M-0123.";return}
+  $("wsSeed").value=c.seed;$("wsN").value=c.n;$("wsMc").checked=c.mc;pqOn=new Set(c.ks);ls.set("pq-on",[...pqOn]);pqTopics();$("wsLoadMsg").textContent="Loaded. Topics, count and format now match that set.";$("wsPrev").click()};
+const dlPromise=window.claude?.use?window.claude.use("downloads"):Promise.resolve(null);
+const INCLAUDE=!!window.claude?.use;
+function browserSave(name,data){const type=name.endsWith(".csv")?"text/csv":"text/html";const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+const fileBase=S=>`${S.title.replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")||"worksheet"}-${S.code}`;
+async function saveFile(name,data,note){const dl=await dlPromise;note.textContent="";if(!dl){if(INCLAUDE){note.textContent="Downloads aren't available in this view.";return}browserSave(name,data);return true}
+  try{await dl.save({filename:name,data});return true}catch(e){note.textContent=e?.code==="declined"?"Download cancelled.":e?.code==="rate_limited"?"A save prompt is already open.":"Couldn't save the file here."}}
+$("wsDl").onclick=async()=>{const S=buildSheet();wsInfo(S);if(await saveFile(`${fileBase(S)}.html`,sheetHtml(S),$("wsDlNote")))$("wsDlNote").textContent=`Saved. Open it in a browser and print, or save as PDF.${S.mc?" Pages: questions, "+(S.needNet?"stereonet, ":"")+"answer sheet, then the key.":" The answer key starts on its own page."}`};
+
+/* grader for bubble sheets */
+let grRows=[];
+function grade(){const out=$("grOut");const c=parseCode($("grCode").value)||{};const S=$("grCode").value.trim()?(parseCode($("grCode").value)?buildSheet(c):null):buildSheet();
+  if(!S){out.innerHTML='<p class="note">Enter the set code printed on the sheet.</p>';return}if(!S.mc){out.innerHTML='<p class="note">That set is write-in. Grading works for multiple-choice sets.</p>';return}
+  const lines=$("grIn").value.split(/\n/).map(l=>l.trim()).filter(Boolean);if(!lines.length){out.innerHTML=`<p class="note">Key for ${S.code}: <span class="mono">${S.key}</span>. Paste student answers to grade.</p>`;return}
+  const N=S.key.length,per=Array(N).fill(0);grRows=lines.map(l=>{const m=l.match(/^(.*?)[,\t:;]\s*([A-Da-d\-\s_.]+)$/)||["",`Student`,l];const name=m[1].trim()||"Student",ans=m[2].toUpperCase().replace(/\s+/g,"").replace(/[_.]/g,"-");
+    let ok=0;const miss=[];for(let i=0;i<N;i++){if(ans[i]===S.key[i]){ok++;per[i]++}else miss.push(i+1)}return {name,ans,ok,miss,len:ans.length}});
+  const avg=grRows.reduce((t,r)=>t+r.ok,0)/grRows.length;
+  out.innerHTML=`<p class="note">Key <span class="mono">${S.key}</span> · ${grRows.length} student${grRows.length>1?"s":""} · class average ${r1(avg)} / ${N} (${Math.round(avg/N*100)}%)</p>
+   <div class="scroll"><table class="gr"><thead><tr><th>Student</th><th>Score</th><th>%</th><th>Missed</th></tr></thead><tbody>${grRows.map(r=>`<tr><td>${esc(r.name)}${r.len!==N?` <span class="note">(${r.len} answers)</span>`:""}</td><td>${r.ok}/${N}</td><td>${Math.round(r.ok/N*100)}</td><td>${r.miss.join(", ")||"—"}</td></tr>`).join("")}</tbody></table></div>
+   <span class="lbl">Percent correct by question</span><div class="gr-items">${per.map((v,i)=>{const pc=Math.round(v/grRows.length*100);return `<div class="gr-it" title="Question ${i+1}: ${pc}% correct"><span>${i+1}</span><i style="height:${Math.max(2,pc*.4)}px" class="${pc<50?"lo":""}"></i><b>${pc}</b></div>`}).join("")}</div>
+   <p class="note">Questions under 50% are highlighted. Names stay in this page only and aren't saved.</p>`;grRows.S=S}
+$("grGo").onclick=grade;
+$("grDl").onclick=async()=>{if(!grRows.length){grade();if(!grRows.length)return}const S=grRows.S,N=S.key.length;
+  const q=v=>`"${String(v).replace(/"/g,'""')}"`;const csv=[["Student","Score","Out of","Percent","Answers","Missed"].join(","),...grRows.map(r=>[q(r.name),r.ok,N,Math.round(r.ok/N*100),q(r.ans),q(r.miss.join(" "))].join(","))].join("\n");
+  if(await saveFile(`scores-${S.code}.csv`,csv,$("grNote")))$("grNote").textContent="Scores saved as a CSV you can open in any spreadsheet."};
+pqTopics();pqDraw();pqScoreDraw();
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["id","ml","tx","sd","st","sg","pq","ai"].forEach(k=>$("p-"+k).hidden=k!==b.dataset.t);ls.set("tsid-tab",b.dataset.t)});
+{const t=ls.get("tsid-tab","id");document.querySelector(`.tab[data-t="${t}"]`)?.click()}
+
+/* ---------- tutor ---------- */
+const samplePromise=window.claude?.use?window.claude.use("sample"):Promise.resolve(null);
+if(!window.claude?.use){const t=document.querySelector('.tab[data-t="ai"]');if(t)t.hidden=true;if(ls.get("tsid-tab","id")==="ai")document.querySelector('.tab[data-t="id"]').click()}
+let aiFiles=[];
+$("aiFile").onchange=e=>{aiFiles=[...e.target.files].slice(0,4);const th=$("aiThumbs");th.innerHTML="";aiFiles.forEach(f=>{const im=document.createElement("img");im.alt="Thin section photo";im.src=URL.createObjectURL(f);th.append(im)});th.hidden=!aiFiles.length;$("aiDropTxt").hidden=!!aiFiles.length;e.target.value=""};
+$("aiFromSel").onclick=()=>{const parts=Object.entries(sel).map(([g,v])=>`${ALLG.find(x=>x.id===g).t.split(" (")[0]}: ${v.map(x=>label(g,x)).join(" or ")}`);
+  $("aiDesc").value=parts.length?parts.join("; ")+".":"";if(!parts.length)$("aiStatus").textContent="Select some properties in Identify first."};
+const COPY={not_granted:"Claude access wasn't allowed for this page.",rate_limited:"Too many requests. Try again in a minute.",image_rejected:"That photo couldn't be read. Try a JPEG or PNG.",images_unavailable:"Photos can't be sent from this view. Describe the grain instead.",refused:"The tutor couldn't help with that one.",invalid_json:"The answer came back garbled. Try again."};
+$("aiGo").onclick=async()=>{
+  const desc=$("aiDesc").value.trim();if(!desc&&!aiFiles.length){$("aiStatus").textContent="Describe the grain or add a photo first.";return}
+  const s=await samplePromise;if(!s){$("aiStatus").textContent="Open this page in Claude to use the tutor.";return}
+  $("aiGo").disabled=true;$("aiStatus").textContent="Looking at your grain…";
+  const names=MINERALS.map(m=>m.n).join(", ");
+  const prompt=`You are a patient optical mineralogy tutor for undergraduate geology students. Based on the student's observations${aiFiles.length?" and the attached thin section photo(s) (PPL and/or XPL; standard 30 µm thickness unless they say otherwise)":""}, suggest the most likely minerals. Prefer common rock-forming minerals such as: ${names}, but you may name others if clearly better.
+Teach, don't just answer: explain which observations support each candidate and give concrete things to check next on the microscope to tell the candidates apart. If information is missing or ambiguous, say so. Be accurate; never invent properties.
+Student's description: "${desc||"(no text, see photos)"}"
+Reply with only JSON: {"candidates":[{"name": string, "confidence": "high"|"medium"|"low", "why": 1-2 sentences}], "checkNext": [2-4 short, specific microscope checks], "note": one sentence of general advice or a caveat}`;
+  try{const opts={cache:false};if(aiFiles.length)opts.images=aiFiles;const r=await s.json(prompt,opts);
+    const c=Array.isArray(r?.candidates)?r.candidates.slice(0,4):[];if(!c.length)throw{code:"invalid_json"};
+    $("aiOut").innerHTML=c.map(x=>`<div class="cand"><b>${esc(x.name)}</b><span class="lbl">${esc(x.confidence||"")} confidence</span><span>${esc(x.why)}</span></div>`).join("")+
+      (Array.isArray(r.checkNext)&&r.checkNext.length?`<div><span class="lbl">Check next on the scope</span><ul style="margin:6px 0 0;padding-left:1.2em">${r.checkNext.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:"")+
+      (r.note?`<p class="note">${esc(r.note)}</p>`:"");$("aiStatus").textContent="";
+  }catch(e){$("aiStatus").textContent=COPY[e?.code]||"Something went wrong. Try again."}finally{$("aiGo").disabled=false}};
+
+$("srcMin").innerHTML=MIN_SRC.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join(" · ");
+$("srcSed").innerHTML=SED_SRC.map(([t,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join(" · ");
+buildPresets();buildFilters();results();drawML();drawTx();drawSed();
+</script>
+
+</body>
+</html>
