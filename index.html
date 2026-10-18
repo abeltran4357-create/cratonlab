@@ -409,7 +409,7 @@ footer a{color:var(--acc)}
     </div>
   </section>
 
-  <footer><p>Mineral properties are typical values for standard 30 µm sections and vary with composition and orientation. Interference colors on this page are an approximate visual guide. Confirm important IDs with an optical mineralogy reference.</p>
+  <footer><p><b>Browse:</b> <a href="/minerals/">Minerals in thin section</a> · <a href="/textures/">Textures</a> · <a href="/sedimentary-structures/">Sedimentary structures</a> · <a href="/tools/">Tools and calculators</a></p><p>Mineral properties are typical values for standard 30 µm sections and vary with composition and orientation. Interference colors on this page are an approximate visual guide. Confirm important IDs with an optical mineralogy reference.</p>
   <p><b>Sources, minerals:</b> <span id="srcMin"></span></p><p><b>Sources, sedimentary structures:</b> <span id="srcSed"></span></p><p><b>Sources, structural geology:</b> <span id="srcSg"></span></p>
   <p>Photo links open other sites: the Alex Strekeisen thin-section collection, the University of Geneva OpticMin image pages, and Wikimedia Commons search.</p></footer>
 </div>
@@ -1329,7 +1329,11 @@ pqTopics();pqDraw();pqScoreDraw();
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===b));
   ["id","ml","tx","sd","st","sg","pq","ai"].forEach(k=>$("p-"+k).hidden=k!==b.dataset.t);ls.set("tsid-tab",b.dataset.t)});
-{const t=ls.get("tsid-tab","id");document.querySelector(`.tab[data-t="${t}"]`)?.click()}
+function openFromHash(){const [t,sub]=decodeURIComponent(location.hash.slice(1)).split("/");if(!t||!document.querySelector(`.tab[data-t="${t}"]`))return false;
+  if(t==="sg"&&sub&&SG_TOOLS.some(x=>x[0]===sub)){stTool=sub;ls.set("sg-tool",sub);sgNav();sgShow()}
+  document.querySelector(`.tab[data-t="${t}"]`).click();return true}
+if(!openFromHash()){const t=ls.get("tsid-tab","id");document.querySelector(`.tab[data-t="${t}"]`)?.click()}
+addEventListener("hashchange",openFromHash);
 
 /* ---------- tutor ---------- */
 const samplePromise=window.claude?.use?window.claude.use("sample"):Promise.resolve(null);
