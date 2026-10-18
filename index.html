@@ -94,6 +94,8 @@ h1{font-family:var(--disp);font-weight:600;font-size:clamp(30px,6vw,44px);line-h
 
 
 /* practice */
+.promo{display:grid;gap:4px;background:var(--acc-soft);border:1px solid var(--acc);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink)}.promo .btn{justify-self:start;margin-top:6px}
+.hdr-pack{display:inline-block;margin-top:8px;font-size:14px;font-weight:500;color:var(--acc)}
 .gr-in{font:14px var(--mono);color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;width:100%}
 table.gr{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}table.gr th,table.gr td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}table.gr th{font:500 12px var(--mono);color:var(--muted)}
 .gr-items{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;margin:6px 0}.gr-it{display:grid;justify-items:center;font:11px var(--mono);color:var(--muted);width:28px}.gr-it i{display:block;width:14px;background:var(--acc);border-radius:2px}.gr-it i.lo{background:var(--bad)}.gr-it b{font-weight:500;color:var(--ink)}
@@ -225,6 +227,7 @@ footer a{color:var(--acc)}
     </div>
     <p class="sub">Identify minerals in thin section, read sedimentary structures, solve stereonet and structural geology problems, and practice with worked solutions. Every claim links to its source.</p>
     <div class="band" aria-hidden="true"></div>
+    <a class="hdr-pack" href="https://store.payloadz.com/go?id=2723403" target="_blank" rel="noopener">New: Worksheet Pack 1, 120 problems with answer keys, $19 →</a>
   </header>
 
   <div class="tabs" role="tablist">
@@ -365,6 +368,7 @@ footer a{color:var(--acc)}
   </section>
 
   <section class="panel" id="p-pq" role="tabpanel" hidden>
+    <a class="promo" href="https://store.payloadz.com/go?id=2723403" target="_blank" rel="noopener"><span class="lbl">Worksheet Pack 1 · $19</span><b>10 ready-to-print sets, 120 problems, bubble sheets and worked answer keys</b><span class="note">Stereonet, dip, faults, folds, three-point, Mohr circles, thin-section minerals and sed structures. Instant PDF download.</span><span class="btn main">Get the pack</span></a>
     <div class="pq">
       <div class="card grp"><span class="lbl">Topics</span><div id="pqTopics" class="pq-topics"></div>
         <div class="st-row st-end"><span class="note" id="pqScore"></span><span><button class="btn small" id="pqReset" type="button">Reset score</button> <button class="btn main" id="pqNew" type="button">New problem</button></span></div></div>
@@ -409,7 +413,7 @@ footer a{color:var(--acc)}
     </div>
   </section>
 
-  <footer><p><b>Browse:</b> <a href="/minerals/">Minerals in thin section</a> · <a href="/textures/">Textures</a> · <a href="/sedimentary-structures/">Sedimentary structures</a> · <a href="/tools/">Tools and calculators</a></p><p>Mineral properties are typical values for standard 30 µm sections and vary with composition and orientation. Interference colors on this page are an approximate visual guide. Confirm important IDs with an optical mineralogy reference.</p>
+  <footer><p><b>Browse:</b> <a href="/minerals/">Minerals in thin section</a> · <a href="/textures/">Textures</a> · <a href="/sedimentary-structures/">Sedimentary structures</a> · <a href="/tools/">Tools and calculators</a> · <a href="/worksheets/">Worksheet packs</a></p><p>Mineral properties are typical values for standard 30 µm sections and vary with composition and orientation. Interference colors on this page are an approximate visual guide. Confirm important IDs with an optical mineralogy reference.</p>
   <p><b>Sources, minerals:</b> <span id="srcMin"></span></p><p><b>Sources, sedimentary structures:</b> <span id="srcSed"></span></p><p><b>Sources, structural geology:</b> <span id="srcSg"></span></p>
   <p>Photo links open other sites: the Alex Strekeisen thin-section collection, the University of Geneva OpticMin image pages, and Wikimedia Commons search.</p></footer>
 </div>
